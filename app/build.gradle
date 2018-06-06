@@ -1,0 +1,17 @@
+apply plugin: 'kotlin'
+apply plugin: 'application'
+
+group 'info.vividcode'
+version '1.0-SNAPSHOT'
+
+mainClassName = 'Main'
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+}
