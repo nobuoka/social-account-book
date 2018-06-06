@@ -1,2 +1,3 @@
 rootProject.name = 'sbs'
 include 'app'
+include 'modules:sbs-main'

@@ -1,5 +1,9 @@
 @file:JvmName("Main")
 
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+
 fun main(args: Array<String>) {
-    println("Hello world!")
+    val server = embeddedServer(Netty, commandLineEnvironment(args))
+    server.start()
 }
