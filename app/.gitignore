@@ -1,1 +1,5 @@
+# Gradle
 /build/
+
+# IntelliJ IDEA
+/out/
