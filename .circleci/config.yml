@@ -18,7 +18,7 @@ jobs:
       - run:
           name: Build
           command: |
-            ./gradlew --no-daemon distTar
+            ./gradlew --no-daemon build
       - save_cache:
           paths:
             - ~/.gradle
