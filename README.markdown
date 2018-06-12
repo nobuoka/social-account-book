@@ -2,6 +2,7 @@
 ==========
 
 [![CircleCI](https://circleci.com/gh/nobuoka/social-balance-sheet.svg?style=svg)](https://circleci.com/gh/nobuoka/social-balance-sheet)
+[![codecov](https://codecov.io/gh/nobuoka/social-balance-sheet/branch/master/graph/badge.svg)](https://codecov.io/gh/nobuoka/social-balance-sheet)
 
 ## Heroku
 

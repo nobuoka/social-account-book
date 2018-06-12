@@ -16,3 +16,43 @@ subprojects {
         maven { url "https://dl.bintray.com/kotlin/ktor" }
     }
 }
+
+repositories {
+    jcenter()
+}
+
+apply plugin: 'jacoco'
+
+task jacocoMerge(type: JacocoMerge) {
+    gradle.afterProject { p, state ->
+        if (p.rootProject != p && p.plugins.hasPlugin('jacoco')) {
+            executionData p.tasks.test.jacoco.destinationFile
+            dependsOn(p.tasks.test)
+        }
+    }
+}
+
+task jacocoMergedReport(type: JacocoReport, dependsOn: [tasks.jacocoMerge]) {
+    executionData jacocoMerge.destinationFile
+    sourceDirectories = files()
+    classDirectories = files()
+    gradle.afterProject { p, state ->
+        if (p.rootProject != p && p.plugins.hasPlugin('java')) {
+            sourceDirectories = sourceDirectories + files([p.sourceSets.main.allJava.srcDirs])
+            classDirectories = classDirectories + p.sourceSets.main.output
+        }
+    }
+
+    reports {
+        xml.enabled = true
+        xml.destination file("${buildDir}/reports/jacoco/report.xml")
+        html.destination file("${buildDir}/reports/jacoco/html")
+    }
+}
+
+task check(dependsOn: [tasks.jacocoMergedReport])
+task build(dependsOn: [tasks.check])
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

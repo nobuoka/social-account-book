@@ -19,6 +19,10 @@ jobs:
           name: Build
           command: |
             ./gradlew --no-daemon build
+      - run:
+          name: Report code coverage
+          command: |
+            bash <(curl -s https://codecov.io/bash)
       - save_cache:
           paths:
             - ~/.gradle
