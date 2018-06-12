@@ -7,9 +7,10 @@ internal class WwwFormUrlEncodedTest {
 
     @Test
     fun parseWwwFormUrlEncoded() {
-        val testInput = "ab%c=ddd+%3+0%39aaa&efg=klm".toByteArray()
+        val testInput = "ab%c=ddd+%3+0%39aaa&&no-equal-sign&efg=klm".toByteArray()
         val expected = listOf(
             "ab%c" to "ddd %3 09aaa",
+            "no-equal-sign" to "",
             "efg" to "klm"
         )
 
@@ -28,11 +29,20 @@ internal class WwwFormUrlEncodedTest {
 
     @Test
     fun percentDecode() {
-        val testValue = "abc%39%"
-        val expected = "abc9%"
+        val testValue = "abc%39%6d%6E%l%".toByteArray()
+        val expected = "abc9mn%l%".toByteArray()
 
-        val actual = percentDecode(testValue.toByteArray())
-        assertArrayEquals(expected.toByteArray(), actual)
+        val actual = percentDecode(testValue)
+        assertArrayEquals(expected, actual)
+    }
+
+    @Test
+    fun percentDecode_emptyByteSequence() {
+        val testValue = byteArrayOf()
+        val expected = byteArrayOf()
+
+        val actual = percentDecode(testValue)
+        assertArrayEquals(expected, actual)
     }
 
 }
