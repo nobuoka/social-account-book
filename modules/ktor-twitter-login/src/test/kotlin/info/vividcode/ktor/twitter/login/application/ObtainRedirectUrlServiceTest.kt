@@ -30,6 +30,7 @@ internal class ObtainRedirectUrlServiceTest {
             ClientCredential("test-identifier", "test-shared-secret")
 
         testServerTwitter.responseBuilders.add(responseBuilder {
+            println("Response builder started")
             code(200).message("OK")
             body(
                 ResponseBody.create(
@@ -37,11 +38,15 @@ internal class ObtainRedirectUrlServiceTest {
                     "oauth_token=dd&oauth_token_secret=a"
                 )
             )
+            println("Response builder finished")
         })
 
         // Act
         val redirectUrl = runBlocking {
-            testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback")
+            println("Act started")
+            testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback").also {
+                println("Act finished")
+            }
         }
 
         // Assert
