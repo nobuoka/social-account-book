@@ -4,6 +4,9 @@ jobs:
   build-app-dist:
     docker:
       - image: openjdk:8
+    environment:
+      JAVA_OPTS: "-Xms512m -Xmx2048m"
+      GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs="-Xmx1560m -XX:+HeapDumpOnOutOfMemoryError"'
     steps:
       - checkout
       - run:
