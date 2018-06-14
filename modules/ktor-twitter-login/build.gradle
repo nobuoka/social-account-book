@@ -15,6 +15,10 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 
 test {
     useJUnitPlatform()
+    testLogging {
+        displayGranularity -1
+        events "started", "passed", "failed"
+    }
 }
 
 dependencies {
