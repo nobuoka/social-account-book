@@ -36,7 +36,9 @@ class ObtainRedirectUrlService(private val env: Required) {
         val additionalProtocolParameters = listOf(ProtocolParameter.Callback(twitterLoginCallbackAbsoluteUrl))
         val authorizedRequest = authorize(unauthorizedRequest, clientCredential, additionalProtocolParameters)
 
+        println("Async start")
         val temporaryCredential = async(env.httpCallContext) {
+            println("Async start 2")
             try {
                 env.httpClient.newCall(authorizedRequest).execute()
             } catch (exception: IOException) {
@@ -58,8 +60,11 @@ class ObtainRedirectUrlService(private val env: Required) {
                 } else {
                     throw TwitterCallFailedException("Not expected response content (response body is null)")
                 }
+            }.also {
+                println("Async finish 2")
             }
         }.await()
+        println("Async finish")
         env.temporaryCredentialStore.saveTemporaryCredential(temporaryCredential)
         return "https://api.twitter.com/oauth/authenticate?oauth_token=${encodeURLQueryComponent(temporaryCredential.token)}"
     }
