@@ -34,7 +34,7 @@ class ObtainRedirectUrlService(private val env: Required) {
             .url("https://api.twitter.com/oauth/request_token")
             .build()
         val additionalProtocolParameters = listOf(ProtocolParameter.Callback(twitterLoginCallbackAbsoluteUrl))
-        val authorizedRequest = authorize(unauthorizedRequest, clientCredential, additionalProtocolParameters)
+        //val authorizedRequest = authorize(unauthorizedRequest, clientCredential, additionalProtocolParameters)
 
         println("Async start")
         val temporaryCredential = TemporaryCredential("token", "secret")
