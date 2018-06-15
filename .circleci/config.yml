@@ -13,6 +13,7 @@ jobs:
               md5sum settings.gradle
               md5sum $(find . -name 'build.gradle')
             } > ~/cache-key-source-gradle
+            cat ~/cache-key-source-gradle
       - restore_cache:
           key: gradle-{{ checksum "~/cache-key-source-gradle" }}
       - run:
