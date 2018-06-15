@@ -38,31 +38,32 @@ class ObtainRedirectUrlService(private val env: Required) {
 
         println("Async start")
         val temporaryCredential = async(env.httpCallContext) {
-            println("Async start 2")
-            try {
-                env.httpClient.newCall(authorizedRequest).execute()
-            } catch (exception: IOException) {
-                throw TwitterCallFailedException("Request couldn't be executed", exception)
-            }.use { response ->
-                if (!response.isSuccessful) {
-                    throw TwitterCallFailedException("Response not successful (status code : ${response.code()})")
-                }
-                val body = response.body()?.bytes()
-                if (body != null) {
-                    val pairs = parseWwwFormUrlEncoded(body).toMap()
-                    val oauthToken = pairs["oauth_token"]
-                    val oauthTokenSecret = pairs["oauth_token_secret"]
-                    if (oauthToken == null || oauthTokenSecret == null) {
-                        throw TwitterCallFailedException("Unexpected response content (response body : $body)")
-                    } else {
-                        TemporaryCredential(oauthToken, oauthTokenSecret)
-                    }
-                } else {
-                    throw TwitterCallFailedException("Not expected response content (response body is null)")
-                }
-            }.also {
-                println("Async finish 2")
-            }
+            TemporaryCredential("token", "secret")
+//            println("Async start 2")
+//            try {
+//                env.httpClient.newCall(authorizedRequest).execute()
+//            } catch (exception: IOException) {
+//                throw TwitterCallFailedException("Request couldn't be executed", exception)
+//            }.use { response ->
+//                if (!response.isSuccessful) {
+//                    throw TwitterCallFailedException("Response not successful (status code : ${response.code()})")
+//                }
+//                val body = response.body()?.bytes()
+//                if (body != null) {
+//                    val pairs = parseWwwFormUrlEncoded(body).toMap()
+//                    val oauthToken = pairs["oauth_token"]
+//                    val oauthTokenSecret = pairs["oauth_token_secret"]
+//                    if (oauthToken == null || oauthTokenSecret == null) {
+//                        throw TwitterCallFailedException("Unexpected response content (response body : $body)")
+//                    } else {
+//                        TemporaryCredential(oauthToken, oauthTokenSecret)
+//                    }
+//                } else {
+//                    throw TwitterCallFailedException("Not expected response content (response body is null)")
+//                }
+//            }.also {
+//                println("Async finish 2")
+//            }
         }.await()
         println("Async finish")
         env.temporaryCredentialStore.saveTemporaryCredential(temporaryCredential)

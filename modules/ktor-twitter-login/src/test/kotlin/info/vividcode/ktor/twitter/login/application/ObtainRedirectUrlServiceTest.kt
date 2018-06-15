@@ -44,9 +44,9 @@ internal class ObtainRedirectUrlServiceTest {
         // Act
         val redirectUrl = runBlocking {
             println("Act started")
-//            testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback").also {
-//                println("Act finished")
-//            }
+            testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback").also {
+                println("Act finished")
+            }
         }
 
         // Assert
@@ -88,7 +88,7 @@ internal class ObtainRedirectUrlServiceTest {
         // Act and Assert
         Assertions.assertThrows(TwitterCallFailedException::class.java, {
             runBlocking {
-//                testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback")
+                testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback")
             }
         })
     }
@@ -111,7 +111,7 @@ internal class ObtainRedirectUrlServiceTest {
         // Act and Assert
         Assertions.assertThrows(TwitterCallFailedException::class.java, {
             runBlocking {
-//                testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback")
+                testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback")
             }
         })
     }
@@ -128,7 +128,7 @@ internal class ObtainRedirectUrlServiceTest {
         // Act and Assert
         Assertions.assertThrows(TwitterCallFailedException::class.java, {
             runBlocking {
-//                testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback")
+                testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback")
             }
         })
     }
@@ -145,7 +145,7 @@ internal class ObtainRedirectUrlServiceTest {
         // Act and Assert
         Assertions.assertThrows(TwitterCallFailedException::class.java, {
             runBlocking {
-//                testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback")
+                testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback")
             }
         })
     }
