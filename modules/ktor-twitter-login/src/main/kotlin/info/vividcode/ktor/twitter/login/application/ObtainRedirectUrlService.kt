@@ -16,6 +16,7 @@ import okhttp3.RequestBody
 import java.io.IOException
 import java.security.SecureRandom
 import java.time.Clock
+import java.util.*
 import kotlin.coroutines.experimental.CoroutineContext
 
 class ObtainRedirectUrlService(private val env: Required) {
@@ -79,7 +80,7 @@ class ObtainRedirectUrlService(private val env: Required) {
     ): Request {
         val httpRequest = HttpRequest(unauthorizedRequest.method(), unauthorizedRequest.url().url())
 
-        val nextInt: (Int) -> Int = SecureRandom.getInstanceStrong()::nextInt
+        val nextInt: (Int) -> Int = Random()::nextInt
         val nonceGenerator = OAuthNonceGenerator(object : NextIntEnv {
             override val nextInt: (Int) -> Int = nextInt
         })
