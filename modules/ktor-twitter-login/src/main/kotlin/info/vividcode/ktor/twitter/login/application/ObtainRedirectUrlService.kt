@@ -37,8 +37,9 @@ class ObtainRedirectUrlService(private val env: Required) {
         val authorizedRequest = authorize(unauthorizedRequest, clientCredential, additionalProtocolParameters)
 
         println("Async start")
-        val temporaryCredential = async(env.httpCallContext) {
-            TemporaryCredential("token", "secret")
+        val temporaryCredential = TemporaryCredential("token", "secret")
+        //async(env.httpCallContext) {
+
 //            println("Async start 2")
 //            try {
 //                env.httpClient.newCall(authorizedRequest).execute()
@@ -64,7 +65,7 @@ class ObtainRedirectUrlService(private val env: Required) {
 //            }.also {
 //                println("Async finish 2")
 //            }
-        }.await()
+        //}.await()
         println("Async finish")
         env.temporaryCredentialStore.saveTemporaryCredential(temporaryCredential)
         return "https://api.twitter.com/oauth/authenticate?oauth_token=${encodeURLQueryComponent(temporaryCredential.token)}"
