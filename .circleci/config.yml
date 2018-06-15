@@ -11,7 +11,7 @@ jobs:
             {
               md5sum gradle/wrapper/gradle-wrapper.properties
               md5sum settings.gradle
-              md5sum $(find . -name 'build.gradle')
+              md5sum $(find . -name 'build.gradle' | sort -)
             } > ~/cache-key-source-gradle
       - restore_cache:
           key: gradle-{{ checksum "~/cache-key-source-gradle" }}
