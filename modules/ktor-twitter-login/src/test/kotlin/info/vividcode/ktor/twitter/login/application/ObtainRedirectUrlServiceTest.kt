@@ -10,6 +10,9 @@ import okhttp3.*
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.io.IOException
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
 import kotlin.coroutines.experimental.CoroutineContext
 
 internal class ObtainRedirectUrlServiceTest {
@@ -19,7 +22,10 @@ internal class ObtainRedirectUrlServiceTest {
     private val testTarget = ObtainRedirectUrlService(object : ObtainRedirectUrlService.Required {
         override val temporaryCredentialStore: TemporaryCredentialStore =
             TemporaryCredentialStore.OnMemoryTemporaryCredentialStore
-        override val oauth: OAuth = OAuth.DEFAULT
+        override val oauth: OAuth = OAuth(object : OAuth.Env {
+            override val clock: Clock = Clock.fixed(Instant.parse("2010-01-01T00:00:00Z"), ZoneId.systemDefault())
+            override val nextInt: (Int) -> Int = { (it - 1) / 2 }
+        })
         override val httpClient: Call.Factory = TestCallFactory(testServerTwitter)
         override val httpCallContext: CoroutineContext = newSingleThreadContext("TestHttpCall")
     })
