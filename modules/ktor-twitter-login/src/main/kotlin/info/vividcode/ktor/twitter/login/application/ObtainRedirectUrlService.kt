@@ -3,11 +3,10 @@ package info.vividcode.ktor.twitter.login.application
 import info.vividcode.ktor.twitter.login.ClientCredential
 import info.vividcode.ktor.twitter.login.TemporaryCredential
 import info.vividcode.ktor.twitter.login.TemporaryCredentialStore
-import info.vividcode.oauth.HttpRequest
-import info.vividcode.oauth.OAuth
-import info.vividcode.oauth.OAuthCredentials
-import info.vividcode.oauth.ProtocolParameter
+import info.vividcode.oauth.*
 import info.vividcode.oauth.protocol.ParameterTransmission
+import info.vividcode.oauth.protocol.PercentEncode
+import info.vividcode.oauth.protocol.Signatures
 import info.vividcode.whatwg.url.parseWwwFormUrlEncoded
 import io.ktor.http.encodeURLQueryComponent
 import kotlinx.coroutines.experimental.async
@@ -15,6 +14,8 @@ import okhttp3.Call
 import okhttp3.Request
 import okhttp3.RequestBody
 import java.io.IOException
+import java.security.SecureRandom
+import java.time.Clock
 import kotlin.coroutines.experimental.CoroutineContext
 
 class ObtainRedirectUrlService(private val env: Required) {
@@ -34,7 +35,7 @@ class ObtainRedirectUrlService(private val env: Required) {
             .url("https://api.twitter.com/oauth/request_token")
             .build()
         val additionalProtocolParameters = listOf(ProtocolParameter.Callback(twitterLoginCallbackAbsoluteUrl))
-        //val authorizedRequest = authorize(unauthorizedRequest, clientCredential, additionalProtocolParameters)
+        val authorizedRequest = authorize(unauthorizedRequest, clientCredential, additionalProtocolParameters)
 
         println("Async start")
         val temporaryCredential = TemporaryCredential("token", "secret")
@@ -77,12 +78,33 @@ class ObtainRedirectUrlService(private val env: Required) {
         additionalProtocolParameters: List<ProtocolParameter<*>>
     ): Request {
         val httpRequest = HttpRequest(unauthorizedRequest.method(), unauthorizedRequest.url().url())
-        val protocolParameters = env.oauth.generateProtocolParametersSigningWithHmacSha1(
-            httpRequest,
-            clientCredentials = OAuthCredentials(clientCredential.identifier, clientCredential.sharedSecret),
-            temporaryOrTokenCredentials = null,
-            additionalProtocolParameters = additionalProtocolParameters
+
+        val nextInt: (Int) -> Int = SecureRandom.getInstanceStrong()::nextInt
+        val nonceGenerator = OAuthNonceGenerator(object : NextIntEnv {
+            override val nextInt: (Int) -> Int = nextInt
+        })
+        val clock: Clock = Clock.systemDefaultZone()
+
+        val protocolParams = OAuthProtocolParameters.createProtocolParametersExcludingSignature(
+            clientCredential.identifier,
+            null,
+            OAuthProtocolParameters.Options.HmcSha1Signing(nonceGenerator.generateNonceString(), clock.instant()),
+            additionalProtocolParameters
         )
+        val secrets = "ddd&ddd"
+        val signature = when (protocolParams.get(ProtocolParameter.SignatureMethod)) {
+            is ProtocolParameter.SignatureMethod.HmacSha1 -> Signatures.makeSignatureWithHmacSha1(secrets, "testbasestring")
+            is ProtocolParameter.SignatureMethod.Plaintext -> secrets
+            null -> throw RuntimeException("No signature method specified")
+        }
+        val protocolParameters = ProtocolParameterSet.Builder().add(protocolParams).add(ProtocolParameter.Signature(signature)).build()
+
+//        val protocolParameters = env.oauth.generateProtocolParametersSigningWithHmacSha1(
+//            httpRequest,
+//            clientCredentials = OAuthCredentials(clientCredential.identifier, clientCredential.sharedSecret),
+//            temporaryOrTokenCredentials = null,
+//            additionalProtocolParameters = additionalProtocolParameters
+//        )
         val authorizationHeaderString = ParameterTransmission.getAuthorizationHeaderString(protocolParameters, "")
         return unauthorizedRequest.newBuilder().header("Authorization", authorizationHeaderString).build()
     }
