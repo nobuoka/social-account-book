@@ -6,7 +6,9 @@ import info.vividcode.ktor.twitter.login.test.TestCallFactory
 import info.vividcode.oauth.OAuth
 import kotlinx.coroutines.experimental.newSingleThreadContext
 import kotlinx.coroutines.experimental.runBlocking
-import okhttp3.*
+import okhttp3.Call
+import okhttp3.MediaType
+import okhttp3.ResponseBody
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.io.IOException
@@ -149,12 +151,6 @@ internal class ObtainRedirectUrlServiceTest {
                 testTarget.obtainRedirectUrl(testClientCredential, "http://example.com/callback")
             }
         })
-    }
-
-    companion object {
-        private fun responseBuilder(builder: Response.Builder.() -> Unit): (Request) -> Response = {
-            Response.Builder().request(it).protocol(Protocol.HTTP_1_1).also(builder).build()
-        }
     }
 
 }

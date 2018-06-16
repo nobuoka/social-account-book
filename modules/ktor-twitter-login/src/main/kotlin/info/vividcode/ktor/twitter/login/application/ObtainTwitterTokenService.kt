@@ -1,6 +1,9 @@
 package info.vividcode.ktor.twitter.login.application
 
-import info.vividcode.ktor.twitter.login.*
+import info.vividcode.ktor.twitter.login.ClientCredential
+import info.vividcode.ktor.twitter.login.TemporaryCredential
+import info.vividcode.ktor.twitter.login.TemporaryCredentialStore
+import info.vividcode.ktor.twitter.login.TwitterToken
 import info.vividcode.oauth.HttpRequest
 import info.vividcode.oauth.OAuth
 import info.vividcode.oauth.OAuthCredentials
@@ -30,7 +33,7 @@ class ObtainTwitterTokenService(
         oauthVerifier: String
     ): TwitterToken {
         val temporaryCredential = env.temporaryCredentialStore.findTemporaryCredential(oauthToken)
-                ?: throw TemporaryCredentialNotFoundException()
+                ?: throw TemporaryCredentialNotFoundException(oauthToken)
 
         val unauthorizedRequest = Request.Builder()
             .method("POST", RequestBody.create(null, ByteArray(0)))

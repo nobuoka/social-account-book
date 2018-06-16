@@ -1,3 +1,3 @@
 package info.vividcode.ktor.twitter.login.application
 
-class TemporaryCredentialNotFoundException : Exception()
+class TemporaryCredentialNotFoundException(val temporaryCredentialIdentifier: String) : Exception()

@@ -5,8 +5,8 @@ import info.vividcode.ktor.twitter.login.TemporaryCredential
 import info.vividcode.ktor.twitter.login.TemporaryCredentialStore
 import info.vividcode.ktor.twitter.login.TwitterToken
 import info.vividcode.ktor.twitter.login.test.TestCallFactory
+import info.vividcode.ktor.twitter.login.test.TestTemporaryCredentialStore
 import info.vividcode.oauth.OAuth
-import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.newSingleThreadContext
 import kotlinx.coroutines.experimental.runBlocking
 import okhttp3.*
@@ -17,26 +17,12 @@ import java.io.IOException
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 import kotlin.coroutines.experimental.CoroutineContext
 
 internal class ObtainTwitterTokenServiceTest {
 
     private val testServerTwitter = TestServerTwitter()
-    private val testTemporaryCredentialStore = object : TemporaryCredentialStore {
-        private val map: MutableMap<String, TemporaryCredential> = ConcurrentHashMap()
-
-        override suspend fun saveTemporaryCredential(temporaryCredential: TemporaryCredential) {
-            delay(1, TimeUnit.NANOSECONDS)
-            map[temporaryCredential.token] = temporaryCredential
-        }
-
-        override suspend fun findTemporaryCredential(token: String): TemporaryCredential? {
-            delay(1, TimeUnit.NANOSECONDS)
-            return map[token]
-        }
-    }
+    private val testTemporaryCredentialStore = TestTemporaryCredentialStore()
 
     private val testTarget = ObtainTwitterTokenService(object : ObtainTwitterTokenService.Required {
         override val temporaryCredentialStore: TemporaryCredentialStore = testTemporaryCredentialStore
