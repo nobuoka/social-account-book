@@ -10,7 +10,7 @@ import info.vividcode.oauth.ProtocolParameter
 import info.vividcode.oauth.protocol.ParameterTransmission
 import info.vividcode.whatwg.url.parseWwwFormUrlEncoded
 import io.ktor.http.encodeURLQueryComponent
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.withContext
 import okhttp3.Call
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -36,22 +36,32 @@ class ObtainRedirectUrlService(private val env: Required) {
         val additionalProtocolParameters = listOf(ProtocolParameter.Callback(twitterLoginCallbackAbsoluteUrl))
         val authorizedRequest = authorize(unauthorizedRequest, clientCredential, additionalProtocolParameters)
 
-        val temporaryCredential = async(env.httpCallContext) {
+        val temporaryCredential = withContext(env.httpCallContext) {
             try {
                 env.httpClient.newCall(authorizedRequest).execute()
             } catch (exception: IOException) {
                 throw TwitterCallFailedException("Request couldn't be executed", exception)
             }.use { response ->
-                if (!response.isSuccessful) {
-                    throw TwitterCallFailedException("Response not successful (status code : ${response.code()})")
-                }
                 val body = response.body()?.bytes()
+
+                if (!response.isSuccessful) {
+                    val percentEncoded = body?.joinToString("") { String.format("%%%02X", it) }
+                    throw TwitterCallFailedException(
+                        "Response not successful (status code : ${response.code()}, " +
+                                "percent-encoded response body : $percentEncoded))"
+                    )
+                }
+
                 if (body != null) {
                     val pairs = parseWwwFormUrlEncoded(body).toMap()
                     val oauthToken = pairs["oauth_token"]
                     val oauthTokenSecret = pairs["oauth_token_secret"]
                     if (oauthToken == null || oauthTokenSecret == null) {
-                        throw TwitterCallFailedException("Unexpected response content (response body : $body)")
+                        val percentEncoded = body.joinToString("") { String.format("%%%02X", it) }
+                        throw TwitterCallFailedException(
+                            "Unexpected response content " +
+                                    "(percent-encoded response body : $percentEncoded)"
+                        )
                     } else {
                         TemporaryCredential(oauthToken, oauthTokenSecret)
                     }
@@ -59,7 +69,7 @@ class ObtainRedirectUrlService(private val env: Required) {
                     throw TwitterCallFailedException("Not expected response content (response body is null)")
                 }
             }
-        }.await()
+        }
         env.temporaryCredentialStore.saveTemporaryCredential(temporaryCredential)
         return "https://api.twitter.com/oauth/authenticate?oauth_token=${encodeURLQueryComponent(temporaryCredential.token)}"
     }
@@ -79,5 +89,4 @@ class ObtainRedirectUrlService(private val env: Required) {
         val authorizationHeaderString = ParameterTransmission.getAuthorizationHeaderString(protocolParameters, "")
         return unauthorizedRequest.newBuilder().header("Authorization", authorizationHeaderString).build()
     }
-
 }

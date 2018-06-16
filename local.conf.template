@@ -1,0 +1,23 @@
+# This is a template file of application configuration to run on localhost.
+# You can copy this file to local.conf, and write your own settings.
+#
+# To use your configuration file, add option `-config=./local.conf` to program arguments.
+
+include classpath("application.conf")
+
+ktor {
+    deployment {
+        // `ApplicationEngineEnvironmentReloading` class handles this setting.
+        watch = ["/out/"]
+    }
+}
+
+sbs {
+    contextUrl = "http://localhost:8080"
+    twitter {
+        clientCredential {
+            identifier = "YOUR_TWITTER_APP_IDENTIFIER"
+            sharedSecret = "YOUR_TWITTER_APP_SHARED_SECRET"
+        }
+    }
+}

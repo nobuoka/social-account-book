@@ -1,4 +1,5 @@
 apply plugin: 'kotlin'
+apply plugin: 'java-library'
 apply plugin: 'jacoco'
 
 kotlin {
@@ -25,9 +26,9 @@ dependencies {
 
     implementation "io.ktor:ktor-server-core:$ktor_version"
 
-    implementation 'com.squareup.okhttp3:okhttp:3.9.1'
+    api 'com.squareup.okhttp3:okhttp:3.9.1'
 
-    implementation 'info.vividcode.oauth:oauth-core:0.2.0-SNAPSHOT'
+    api 'info.vividcode.oauth:oauth-core:0.2.0-SNAPSHOT'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.2.0'

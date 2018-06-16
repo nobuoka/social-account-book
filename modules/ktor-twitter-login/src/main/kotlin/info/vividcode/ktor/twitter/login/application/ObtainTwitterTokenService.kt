@@ -10,7 +10,7 @@ import info.vividcode.oauth.OAuthCredentials
 import info.vividcode.oauth.ProtocolParameter
 import info.vividcode.oauth.protocol.ParameterTransmission
 import info.vividcode.whatwg.url.parseWwwFormUrlEncoded
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.withContext
 import okhttp3.Call
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -46,17 +46,22 @@ class ObtainTwitterTokenService(
             listOf(ProtocolParameter.Verifier(oauthVerifier))
         )
 
-        return async(env.httpCallContext) {
+        return withContext(env.httpCallContext) {
             try {
                 env.httpClient.newCall(authorizedRequest).execute()
             } catch (exception: IOException) {
                 throw TwitterCallFailedException("Request couldn't be executed", exception)
             }.use { response ->
+                val body = response.body()?.bytes()
+
                 if (!response.isSuccessful) {
-                    throw TwitterCallFailedException("Response not successful (status code : ${response.code()})")
+                    val percentEncoded = body?.joinToString("") { String.format("%%%02X", it) }
+                    throw TwitterCallFailedException(
+                        "Response not successful (status code : ${response.code()}, " +
+                                "percent-encoded response body : $percentEncoded))"
+                    )
                 }
 
-                val body = response.body()?.bytes()
                 if (body != null) {
                     val pairs = parseWwwFormUrlEncoded(body).toMap()
                     val token = pairs["oauth_token"]
@@ -76,7 +81,7 @@ class ObtainTwitterTokenService(
                     throw TwitterCallFailedException("Not expected response content (response body is null)")
                 }
             }
-        }.await()
+        }
     }
 
     private fun authorize(
