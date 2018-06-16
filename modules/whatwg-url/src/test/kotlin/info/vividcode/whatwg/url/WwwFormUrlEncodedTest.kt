@@ -1,6 +1,7 @@
 package info.vividcode.whatwg.url
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertArrayEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class WwwFormUrlEncodedTest {

@@ -19,7 +19,7 @@ import kotlinx.coroutines.experimental.newSingleThreadContext
 import okhttp3.Call
 import okhttp3.MediaType
 import okhttp3.ResponseBody
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
