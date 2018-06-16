@@ -22,15 +22,15 @@ dependencies {
     implementation project(':modules:whatwg-url')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.23.0'
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version"
 
     implementation "io.ktor:ktor-server-core:$ktor_version"
 
-    api 'com.squareup.okhttp3:okhttp:3.9.1'
+    api "com.squareup.okhttp3:okhttp:$okhttp_version"
 
     api 'info.vividcode.oauth:oauth-core:0.2.0-SNAPSHOT'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.2.0'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_version"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_version"
     testImplementation "io.ktor:ktor-server-test-host:$ktor_version"
 }
