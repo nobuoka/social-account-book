@@ -11,14 +11,18 @@ jobs:
             {
               md5sum gradle/wrapper/gradle-wrapper.properties
               md5sum settings.gradle
-              md5sum $(find . -name 'build.gradle')
+              md5sum $(find . -name 'build.gradle' | sort -)
             } > ~/cache-key-source-gradle
       - restore_cache:
           key: gradle-{{ checksum "~/cache-key-source-gradle" }}
       - run:
           name: Build
           command: |
-            ./gradlew --no-daemon distTar
+            ./gradlew --no-daemon build
+      - run:
+          name: Report code coverage
+          command: |
+            bash <(curl -s https://codecov.io/bash)
       - save_cache:
           paths:
             - ~/.gradle
@@ -48,7 +52,11 @@ jobs:
           background: true
           command: |
             set +e
-            docker run -it --rm -p 8080:8080 --name sbs-app-test sbs-app
+            docker run -it --rm -p 8080:8080 \
+                -e "SBS_CONTEXT_URL=http://localhost:8080" \
+                -e "SBS_TWITTER_CLIENT_IDENTIFIER=TEST_IDENTIFIER" \
+                -e "SBS_TWITTER_CLIENT_SECRET=TEST_SHARED_SECRET" \
+                --name sbs-app-test sbs-app
             s=$?
             # Java application terminated by signal returns exit code 143
             if [ $s -eq 0 -o $s -eq 143 ]; then exit 0; else exit $s; fi
