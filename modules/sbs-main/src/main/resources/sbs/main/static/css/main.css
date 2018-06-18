@@ -1,0 +1,13 @@
+html {
+    background-color: #FFFFFF;
+}
+
+body {
+    color: #363630;
+    background-color: #FFCCCC;
+    max-width: 680px;
+    padding: 16px;
+    margin: auto;
+
+    font-family: "Times", serif;
+}

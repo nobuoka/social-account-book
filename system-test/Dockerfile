@@ -1,7 +1,8 @@
-FROM alpine
+FROM node:9-alpine
 
-RUN apk add --no-cache curl
-COPY ./test.sh /test.sh
+COPY . /test-app
+WORKDIR /test-app
+RUN npm install
+RUN npm run-script build
 
-ENTRYPOINT ["sh"]
-CMD ["/test.sh"]
+CMD ["node", "index.js"]

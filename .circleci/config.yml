@@ -47,6 +47,11 @@ jobs:
       - run:
           name: Build Docker image
           command: docker build -t sbs-app app
+      - run:
+          name: Build Docker image for system test
+          command: docker build -t sbs-system-test system-test
+      - run:
+          command: docker pull quay.io/wakaba/firefoxdriver:stable
 
       - run:
           background: true
@@ -61,12 +66,17 @@ jobs:
             # Java application terminated by signal returns exit code 143
             if [ $s -eq 0 -o $s -eq 143 ]; then exit 0; else exit $s; fi
       - run:
-          name: Wait for Application
+          background: true
+          command: docker run -it --rm --network=host --name sbs-wd-firefox quay.io/wakaba/firefoxdriver:stable /fx
+      - run:
+          name: Wait for test enviroment
           command: sleep 3
       - run:
-          command: |
-            docker build -t sbs-system-test system-test
-            docker run -it --rm --network=host --name sbs-system-test sbs-system-test
+          name: Run system test
+          command: docker run -it --rm --network=host --name sbs-system-test sbs-system-test
+      - run:
+          when: always
+          command: docker stop sbs-wd-firefox
       - run:
           when: always
           command: docker stop sbs-app-test

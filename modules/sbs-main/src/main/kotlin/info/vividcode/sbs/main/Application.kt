@@ -6,14 +6,20 @@ import info.vividcode.ktor.twitter.login.*
 import info.vividcode.ktor.twitter.login.application.TemporaryCredentialNotFoundException
 import info.vividcode.ktor.twitter.login.application.TwitterCallFailedException
 import info.vividcode.oauth.OAuth
+import info.vividcode.sbs.main.presentation.topHtml
+import info.vividcode.sbs.main.presentation.withHtmlDoctype
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCallPipeline
 import io.ktor.application.call
-import io.ktor.http.ContentType
+import io.ktor.content.resources
+import io.ktor.content.static
+import io.ktor.content.staticBasePackage
+import io.ktor.http.ContentType.Text.Html
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.response.respond
 import io.ktor.response.respondRedirect
-import io.ktor.response.respondText
+import io.ktor.response.respondWrite
 import io.ktor.routing.get
 import io.ktor.routing.routing
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
@@ -53,24 +59,13 @@ fun Application.setup(env: Env? = null) {
     }
 
     routing {
-        get(UrlPaths.top) {
-            call.respondText("Hello world!", ContentType.Text.Plain)
+        staticBasePackage = "sbs.main"
+        static("static") {
+            resources("static")
         }
 
-        get(UrlPaths.login) {
-            val loginPageHtml = """
-                <!DOCTYPE html>
-                <html>
-                  <head><title>Login</title></head>
-                  <body>
-                    <h1>Login</h1>
-                    <form method="POST" action="${UrlPaths.TwitterLogin.start}">
-                      <button>Sign in with Twitter</button>
-                    </form>
-                  </body>
-                </html>
-            """.trimIndent()
-            call.respondText(loginPageHtml, ContentType.Text.Html.withParameter("charset", "utf-8"))
+        get(UrlPaths.top) {
+            call.respondWrite(Html, OK, withHtmlDoctype(topHtml(UrlPaths.TwitterLogin.start)))
         }
 
         setupTwitterLogin(
