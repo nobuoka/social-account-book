@@ -7,6 +7,7 @@ fun topHtml(
 ): suspend TagConsumer<*>.() -> Unit = {
     html {
         head {
+            meta(name = "viewport", content = "width=device-width,initial-scale=1")
             title("Social B/S")
             styleLink("/static/css/main.css")
         }
