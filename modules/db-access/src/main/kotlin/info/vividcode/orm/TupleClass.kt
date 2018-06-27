@@ -3,6 +3,11 @@ package info.vividcode.orm
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
+/**
+ * This represents a Kotlin type information of a class that represents a tuple of relational model.
+ *
+ * To retrieve an instance of this class, use the [TupleClassRegistry.getTupleClass] method.
+ */
 class TupleClass<T : Any> internal constructor(
     val type: KClass<T>,
     val members: List<TupleClassMember<T>>
@@ -17,6 +22,7 @@ class TupleClass<T : Any> internal constructor(
                     is TupleClassMember.CounterpartToMultipleAttributes<T, *> -> null
                 }
             }
-            .first()
+            .firstOrNull()
+                ?: throw RuntimeException("Attribute name corresponding to `${property.name}` property not found")
 
 }

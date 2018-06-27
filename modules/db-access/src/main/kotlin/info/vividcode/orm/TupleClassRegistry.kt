@@ -24,7 +24,7 @@ class TupleClassRegistry(private val map: MutableMap<KClass<*>, TupleClass<*>> =
             }.let {
                 TupleClass(target, it)
             }
-        } ?: throw RuntimeException()
+        } ?: throw RuntimeException("$target not have primary constructor")
     }
 
     private fun <T : Any, R : Any> createTupleClassForMultipleAttributes(

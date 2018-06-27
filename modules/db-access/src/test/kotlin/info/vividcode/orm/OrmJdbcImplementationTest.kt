@@ -1,59 +1,44 @@
 package info.vividcode.orm
 
-import info.vividcode.orm.db.createJdbcRelation
-import org.junit.jupiter.api.Assertions
+import info.vividcode.orm.db.createJdbcOrmContext
 import org.junit.jupiter.api.Test
 import java.sql.DriverManager
 
 internal class OrmJdbcImplementationTest {
 
-    data class FooTuple(
-        @AttributeName("id") val testId: Long,
-        val content: Content
-    ) {
+    data class MyTuple(@AttributeName("id") val id: Long)
 
-        data class Content(
-            @AttributeName("value") val testValue: String,
-            @AttributeName("v2") val testValue2: Int
-        )
+    interface MyRelationContext {
 
-    }
+        @RelationName("test")
+        interface MyRelation : BareRelation<MyTuple>
 
-    interface FooRelation : Relation<FooTuple> {
+        val myRelation: MyRelation
 
-        fun insert(tuple: FooTuple.Content): Long
+        @Insert
+        fun MyRelation.insert(value: MyTuple): Long
 
-        fun update(tuple: FooTuple.Content, condition: RelationPredicate<FooTuple>): Int
+        @Update
+        fun MyRelation.update(value: MyTuple, predicate: RelationPredicate<MyTuple>): Int
 
-        fun delete(condition: RelationPredicate<FooTuple>): Int
+        @Delete
+        fun MyRelation.delete(predicate: RelationPredicate<MyTuple>): Int
 
     }
+
+    interface OrmContext : OrmQueryContext, MyRelationContext
 
     @Test
-    fun test() {
+    fun ddd() {
         DriverManager.getConnection("jdbc:h2:mem:test;TRACE_LEVEL_FILE=4").use { connection ->
-            connection.prepareStatement("""CREATE TABLE "foo" ("id" BIGINT NOT NULL AUTO_INCREMENT, "value" TEXT NOT NULL, "v2" INTEGER)""")
-                .execute()
-            val fooRelation: FooRelation = createJdbcRelation(FooRelation::class, "foo", connection)
+            connection.prepareStatement("""CREATE TABLE "test" ("id" BIGINT NOT NULL AUTO_INCREMENT)""").execute()
+            connection.prepareStatement("""INSERT INTO "test" ("id") VALUES (20), (30)""").execute()
 
-            val id = fooRelation.insert(FooTuple.Content("Test value", 100))
-            val expectedTuple = FooTuple(id, FooTuple.Content("Test value", 100))
-
-            run {
-                val selected =
-                    fooRelation
-                        .select(where { FooTuple::testId eq id })
-                        .select(whereOf(FooTuple::content) { FooTuple.Content::testValue2 eq 100 })
-                        .toSet()
-                Assertions.assertEquals(setOf(expectedTuple), selected)
-            }
-
-            run {
-                val selected =
-                    fooRelation
-                        .select(whereOf(FooTuple::content) { FooTuple.Content::testValue eq "Test value" })
-                        .toSet()
-                Assertions.assertEquals(setOf(expectedTuple), selected)
+            val ormContext = createJdbcOrmContext(OrmContext::class, connection)
+            with(ormContext) {
+                println(myRelation.insert(MyTuple(10)))
+                println(myRelation.select(where { MyTuple::id eq 10 }).select(where { MyTuple::id eq 10 }).toSet())
+                println(myRelation.select(where { MyTuple::id eq 10 }).forUpdate())
             }
         }
     }
