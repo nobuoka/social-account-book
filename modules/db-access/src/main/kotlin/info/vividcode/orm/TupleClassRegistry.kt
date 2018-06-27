@@ -32,7 +32,7 @@ class TupleClassRegistry {
             }.let {
                 TupleClass(target, it)
             }
-        } ?: throw RuntimeException("The `$target` class not have primary constructor.")
+        } ?: throw RuntimeException("The `${target.simpleName}` class not have primary constructor.")
     }
 
     private fun <T : Any, R : Any> createTupleClassForMultipleAttributes(

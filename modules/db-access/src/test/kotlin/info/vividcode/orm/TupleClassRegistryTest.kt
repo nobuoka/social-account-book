@@ -18,6 +18,8 @@ internal class TupleClassRegistryTest {
         )
     }
 
+    private interface TestInterface
+
     @Test
     fun getTupleClass() {
         // Act
@@ -46,6 +48,16 @@ internal class TupleClassRegistryTest {
                 contentClass,
                 (it as TupleClassMember.CounterpartToMultipleAttributes<*, *>).subAttributeValues
             )
+        }
+    }
+
+    @Test
+    fun getTupleClass_noPrimaryConstructor() {
+        Assertions.assertThrows(RuntimeException::class.java) {
+            // Act
+            tupleClassRegistry.getTupleClass(TestInterface::class)
+        }.also {
+            Assertions.assertEquals("The `TestInterface` class not have primary constructor.", it.message)
         }
     }
 

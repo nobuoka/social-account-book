@@ -35,7 +35,7 @@ internal class TupleClassTest {
         Assertions.assertThrows(RuntimeException::class.java) {
             // Act
             testTupleClass.findAttributeNameFromProperty(TestTuple::content)
-        }.let {
+        }.also {
             Assertions.assertEquals(it.message, "Attribute name corresponding to `content` property not found")
         }
     }
