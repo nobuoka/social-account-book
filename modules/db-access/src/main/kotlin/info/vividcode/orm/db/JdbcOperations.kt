@@ -10,12 +10,14 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.jvmErasure
 
-fun <T : Any> createJdbcOrmContext(ormContextInterface: KClass<T>, connection: Connection): T =
+fun <T : Any> createJdbcOrmContext(ormContextInterface: KClass<T>, connection: Connection): T = run {
+    val tupleClassRegistry = TupleClassRegistry.Default
     Proxy.newProxyInstance(
         ormContextInterface.java.classLoader,
         arrayOf(ormContextInterface.java),
-        OrmContextInvocationHandler(TupleClassRegistry.Default, DbBareRelationRegistry(), connection)
+        OrmContextInvocationHandler(tupleClassRegistry, DbBareRelationRegistry(tupleClassRegistry), connection)
     ).let(ormContextInterface::cast)
+}
 
 fun executeQuery(
     connection: Connection,

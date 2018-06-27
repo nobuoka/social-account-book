@@ -21,8 +21,10 @@ class TupleClassRegistry {
     private fun <T : Any> createTupleClass(target: KClass<T>): TupleClass<T> = run {
         target.primaryConstructor?.let {
             it.valueParameters.map { p ->
-                val memberName = p.name!!
-                val property = target.memberProperties.find { it.name == memberName }!!
+                val memberName = p.name
+                        ?: throw RuntimeException("Property `$p` has no name.")
+                val property = target.memberProperties.find { it.name == memberName }
+                        ?: throw RuntimeException("There is no member property which is named `$memberName`")
                 if (p.type.jvmErasure.isData) {
                     createTupleClassForMultipleAttributes(memberName, property as KProperty1<T, Any>)
                 } else {

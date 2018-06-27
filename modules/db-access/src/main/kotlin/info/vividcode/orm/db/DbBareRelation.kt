@@ -19,13 +19,13 @@ interface DbBareRelation<T : Any> : BareRelation<T> {
 
     companion object {
         fun <R : BareRelation<*>> create(
-            relationName: String, relationClass: KClass<R>, tupleType: KClass<*>
+            relationName: String, relationClass: KClass<R>, tupleType: KClass<*>, tupleClassRegistry: TupleClassRegistry
         ): DbBareRelation<*> =
             Proxy.newProxyInstance(
                 this::class.java.classLoader,
                 arrayOf(relationClass.java, DbBareRelation::class.java),
                 DbBareRelation.DelegateInvocationHandler(
-                    DbBareRelation.Delegate(tupleType, relationName, TupleClassRegistry.Default)
+                    DbBareRelation.Delegate(tupleType, relationName, tupleClassRegistry)
                 )
             ) as DbBareRelation<*>
     }

@@ -3,6 +3,7 @@ package info.vividcode.orm.db
 import info.vividcode.orm.BareRelation
 import info.vividcode.orm.Relation
 import info.vividcode.orm.RelationName
+import info.vividcode.orm.TupleClassRegistry
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.full.allSupertypes
@@ -10,7 +11,7 @@ import kotlin.reflect.full.cast
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.jvmErasure
 
-class DbBareRelationRegistry {
+class DbBareRelationRegistry(private val tupleClassRegistry: TupleClassRegistry) {
 
     private val relationMap =
         ConcurrentHashMap<KClass<*>, DbBareRelation<*>>()
@@ -23,7 +24,7 @@ class DbBareRelationRegistry {
             val relationName = relationClass.findAnnotation<RelationName>()?.name ?: throw RuntimeException("Unknown")
             val relationSuperType = relationClass.allSupertypes.find { it.jvmErasure == Relation::class } ?: throw RuntimeException("Unknown : $relationClass")
             val tupleType = relationSuperType.arguments.first().type?.jvmErasure ?: throw RuntimeException("Unknown")
-            DbBareRelation.create(relationName, relationClass, tupleType)
+            DbBareRelation.create(relationName, relationClass, tupleType, tupleClassRegistry)
         }
 
 }
