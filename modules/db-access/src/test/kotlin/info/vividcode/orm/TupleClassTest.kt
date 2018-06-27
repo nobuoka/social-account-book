@@ -1,7 +1,6 @@
 package info.vividcode.orm
 
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class TupleClassTest {
@@ -23,6 +22,7 @@ internal class TupleClassTest {
     fun findAttributeNameFromProperty() {
         val testTupleClass = tupleClassRegistry.getTupleClass(TestTuple::class)
 
+        // Act
         val testValuePropertyAttributeName = testTupleClass.findAttributeNameFromProperty(TestTuple::testValue)
 
         Assertions.assertEquals("test_1", testValuePropertyAttributeName)
@@ -32,11 +32,11 @@ internal class TupleClassTest {
     fun findAttributeNameFromProperty_notFound() {
         val testTupleClass = tupleClassRegistry.getTupleClass(TestTuple::class)
 
-        try {
+        Assertions.assertThrows(RuntimeException::class.java) {
+            // Act
             testTupleClass.findAttributeNameFromProperty(TestTuple::content)
-            fail("Should an exception be thrown.") as Any
-        } catch (e: RuntimeException) {
-            Assertions.assertEquals(e.message, "Attribute name corresponding to `content` property not found")
+        }.let {
+            Assertions.assertEquals(it.message, "Attribute name corresponding to `content` property not found")
         }
     }
 

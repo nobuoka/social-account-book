@@ -1,5 +1,6 @@
 package info.vividcode.orm
 
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.findAnnotation
@@ -8,9 +9,16 @@ import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.jvmErasure
 
-class TupleClassRegistry(private val map: MutableMap<KClass<*>, TupleClass<*>> = mutableMapOf()) {
+class TupleClassRegistry {
 
-    fun <T : Any> getTupleClass(target: KClass<T>): TupleClass<T> = run {
+    private val map = ConcurrentHashMap<KClass<*>, TupleClass<*>>()
+
+    fun <T : Any> getTupleClass(target: KClass<T>): TupleClass<T> =
+        map.getOrPut(target) {
+            createTupleClass(target)
+        } as TupleClass<T>
+
+    private fun <T : Any> createTupleClass(target: KClass<T>): TupleClass<T> = run {
         target.primaryConstructor?.let {
             it.valueParameters.map { p ->
                 val memberName = p.name!!
@@ -24,7 +32,7 @@ class TupleClassRegistry(private val map: MutableMap<KClass<*>, TupleClass<*>> =
             }.let {
                 TupleClass(target, it)
             }
-        } ?: throw RuntimeException("$target not have primary constructor")
+        } ?: throw RuntimeException("The `$target` class not have primary constructor.")
     }
 
     private fun <T : Any, R : Any> createTupleClassForMultipleAttributes(
