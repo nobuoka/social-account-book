@@ -36,7 +36,9 @@ interface DbBareRelation<T : Any> : BareRelation<T> {
         override val tupleClassRegistry: TupleClassRegistry
     ) : DbBareRelation<T> {
         override fun select(predicate: RelationPredicate<T>): SimpleRestrictedRelation<T> =
-            OperatedRelation.createSimpleRestricted(predicate, "\"$relationName\"", emptyList(), tupleType, tupleClassRegistry)
+            OperatedRelation.createSimpleRestricted(
+                predicate, "\"$relationName\"", emptyList(), tupleType, tupleClassRegistry
+            )
     }
 
     private class DelegateInvocationHandler<T : Any>(

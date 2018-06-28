@@ -47,7 +47,7 @@ open class OperatedRelation<T : Any>(
 
             val whereClauseOrEmpty = clause.let { "WHERE ${it.whereClauseString}" }
             val newSqlString = "SELECT * FROM $relationSqlString $whereClauseOrEmpty"
-            val newSqlValueSetCallableList = clause.let { relationSqlValueSetterList + it.valueSetProcess }
+            val newSqlValueSetCallableList = clause.let { relationSqlValueSetterList + it.valueSetterList }
             return OperatedRelation(
                 newSqlString,
                 newSqlValueSetCallableList,
@@ -67,7 +67,7 @@ open class OperatedRelation<T : Any>(
 
             val whereClauseOrEmpty = clause.let { "WHERE ${it.whereClauseString}" }
             val newSqlString = "SELECT * FROM $relationSqlString $whereClauseOrEmpty"
-            val newSqlValueSetCallableList = clause.let { relationSqlValueSetterList + it.valueSetProcess }
+            val newSqlValueSetCallableList = clause.let { relationSqlValueSetterList + it.valueSetterList }
             return SimpleRestricted(newSqlString, newSqlValueSetCallableList, returnType, tupleClassRegistry)
         }
     }

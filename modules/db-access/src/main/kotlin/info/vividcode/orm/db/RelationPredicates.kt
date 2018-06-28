@@ -4,7 +4,7 @@ import info.vividcode.orm.RelationPredicate
 import info.vividcode.orm.TupleClassRegistry
 import java.sql.PreparedStatement
 
-class WhereClause(val whereClauseString: String, val valueSetProcess: List<PreparedStatement.(Int) -> Unit>)
+class WhereClause(val whereClauseString: String, val valueSetterList: List<PreparedStatement.(Int) -> Unit>)
 
 fun <T : Any> RelationPredicate<T>.toSqlWhereClause(mappingInfoRegistry: TupleClassRegistry): WhereClause =
     when (this) {
