@@ -18,11 +18,11 @@ fun <T : Any> RelationPredicate<T>.toSqlWhereClause(mappingInfoRegistry: TupleCl
         is RelationPredicate.Converter<T, *> -> this.condition.toSqlWhereClause(mappingInfoRegistry)
     }
 
-private fun <T> valueSetter(value: T): PreparedStatement.(Int) -> Unit {
+private fun <T : Any> valueSetter(value: T): PreparedStatement.(Int) -> Unit {
     return when (value) {
         is String -> { index -> setString(index, value) }
         is Long -> { index -> setLong(index, value) }
         is Int -> { index -> setInt(index, value) }
-        else -> throw RuntimeException("Unknown")
+        else -> throw RuntimeException("Unknown value type (value : `$value`, its type : `${value::class}`)")
     }
 }

@@ -15,7 +15,7 @@ fun <T : Any, R : Any> whereOf(
 
 sealed class RelationPredicate<T : Any> {
 
-    class Eq<T : Any, R>(val type: KClass<T>, val property: KProperty1<T, R>, val value: R) :
+    class Eq<T : Any, R : Any>(val type: KClass<T>, val property: KProperty1<T, R>, val value: R) :
         RelationPredicate<T>()
 
     class Converter<T : Any, R : Any>(val converter: (T) -> R, val condition: RelationPredicate<R>) :

@@ -1,6 +1,8 @@
-package info.vividcode.orm
+package info.vividcode.orm.db
 
-import info.vividcode.orm.db.toSqlWhereClause
+import info.vividcode.orm.AttributeName
+import info.vividcode.orm.TupleClassRegistry
+import info.vividcode.orm.where
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -20,7 +22,7 @@ internal class RelationPredicateTest {
 
     @Test
     fun whereOf() {
-        val predicate = whereOf(TestTuple::content) {
+        val predicate = info.vividcode.orm.whereOf(TestTuple::content) {
             TestTuple.Content::test2 eq 100
         }
 

@@ -8,32 +8,42 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import kotlin.reflect.KClass
 
+class SqlCommand(
+    val sqlString: String,
+    val sqlValueSetterList: List<PreparedStatement.(Int) -> Unit>
+)
+
+class SqlResultInfo<T : Any>(
+    val tupleType: KClass<T>,
+    val tupleClassRegistry: TupleClassRegistry
+)
+
 open class OperatedRelation<T : Any>(
-    private val sqlString: String,
-    private val sqlValueSetterList: List<PreparedStatement.(Int) -> Unit>,
-    private val returnType: KClass<T>,
-    private val tupleClassRegistry: TupleClassRegistry
+    val sqlCommand: SqlCommand,
+    val sqlResultInfo: SqlResultInfo<T>
 ) : Relation<T> {
 
-    class SimpleRestricted<T : Any>(
-        sqlString: String, sqlValueSetterList: List<PreparedStatement.(Int) -> Unit>,
-        returnType: KClass<T>, tupleClassRegistry: TupleClassRegistry
-    ) : OperatedRelation<T>(sqlString, sqlValueSetterList, returnType, tupleClassRegistry),
-        SimpleRestrictedRelation<T>
+    class SimpleRestricted<T : Any> internal constructor(
+        sqlCommand: SqlCommand,
+        sqlResultInfo: SqlResultInfo<T>
+    ) : OperatedRelation<T>(sqlCommand, sqlResultInfo), SimpleRestrictedRelation<T>
 
     override fun select(predicate: RelationPredicate<T>): Relation<T> =
-        create(predicate, "($sqlString)", sqlValueSetterList, returnType, tupleClassRegistry)
+        create(
+            predicate,
+            "(${sqlCommand.sqlString})",
+            sqlCommand.sqlValueSetterList,
+            sqlResultInfo.tupleType,
+            sqlResultInfo.tupleClassRegistry
+        )
 
     fun forUpdate() = OperatedRelation(
-        "$sqlString FOR UPDATE",
-        sqlValueSetterList,
-        returnType,
-        tupleClassRegistry
+        SqlCommand("${sqlCommand.sqlString} FOR UPDATE", sqlCommand.sqlValueSetterList),
+        sqlResultInfo
     )
 
     fun toSet(connection: Connection): Set<T> =
-        executeQuery(connection, sqlString, sqlValueSetterList)
-            .let { retrieveResult(it, returnType, tupleClassRegistry) }
+        executeQuery(connection, sqlCommand).let { retrieveResult(it, sqlResultInfo) }
 
     companion object {
         fun <T : Any> create(
@@ -49,10 +59,8 @@ open class OperatedRelation<T : Any>(
             val newSqlString = "SELECT * FROM $relationSqlString $whereClauseOrEmpty"
             val newSqlValueSetCallableList = clause.let { relationSqlValueSetterList + it.valueSetterList }
             return OperatedRelation(
-                newSqlString,
-                newSqlValueSetCallableList,
-                returnType,
-                tupleClassRegistry
+                SqlCommand(newSqlString, newSqlValueSetCallableList),
+                SqlResultInfo(returnType, tupleClassRegistry)
             )
         }
 
@@ -68,7 +76,10 @@ open class OperatedRelation<T : Any>(
             val whereClauseOrEmpty = clause.let { "WHERE ${it.whereClauseString}" }
             val newSqlString = "SELECT * FROM $relationSqlString $whereClauseOrEmpty"
             val newSqlValueSetCallableList = clause.let { relationSqlValueSetterList + it.valueSetterList }
-            return SimpleRestricted(newSqlString, newSqlValueSetCallableList, returnType, tupleClassRegistry)
+            return SimpleRestricted(
+                SqlCommand(newSqlString, newSqlValueSetCallableList),
+                SqlResultInfo(returnType, tupleClassRegistry)
+            )
         }
     }
 

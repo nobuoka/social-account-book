@@ -21,21 +21,19 @@ fun <T : Any> createJdbcOrmContext(ormContextInterface: KClass<T>, connection: C
 
 fun executeQuery(
     connection: Connection,
-    sqlString: String,
-    sqlValueSetterList: List<PreparedStatement.(Int) -> Unit>?
+    sqlCommand: SqlCommand
 ): ResultSet {
-    val s = connection.prepareStatement(sqlString)
-    sqlValueSetterList?.forEachIndexed { index, function -> function(s, index + 1) }
+    val s = connection.prepareStatement(sqlCommand.sqlString)
+    sqlCommand.sqlValueSetterList.forEachIndexed { index, function -> function(s, index + 1) }
     return s.executeQuery()
 }
 
 fun <T : Any> retrieveResult(
     resultSet: ResultSet,
-    tupleType: KClass<T>,
-    tupleClassRegistry: TupleClassRegistry
+    sqlResultInfo: SqlResultInfo<T>
 ): Set<T> {
     return resultSet.use { rs ->
-        val mappingInfo = tupleClassRegistry.getTupleClass(tupleType)
+        val mappingInfo = sqlResultInfo.tupleClassRegistry.getTupleClass(sqlResultInfo.tupleType)
         val result = mutableSetOf<T>()
         while (rs.next()) {
             val tuple = mapTuple(mappingInfo, DefaultColumnValueMapper.create(), rs)

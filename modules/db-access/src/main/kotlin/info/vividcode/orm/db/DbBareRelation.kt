@@ -14,8 +14,12 @@ interface DbBareRelation<T : Any> : BareRelation<T> {
     val tupleType: KClass<T>
     val relationName: String
     val tupleClassRegistry: TupleClassRegistry
-    fun toOperatedRelation(): OperatedRelation<T> =
-        OperatedRelation("SELECT FROM \"$relationName\"", emptyList(), tupleType, tupleClassRegistry)
+
+    fun selectAll(): OperatedRelation<T> =
+        OperatedRelation(
+            SqlCommand("SELECT FROM \"$relationName\"", emptyList()),
+            SqlResultInfo(tupleType, tupleClassRegistry)
+        )
 
     companion object {
         fun <R : BareRelation<*>> create(
@@ -53,11 +57,19 @@ interface DbBareRelation<T : Any> : BareRelation<T> {
                 } == true
                 "hashCode" -> delegateObject.hashCode()
                 "toString" -> delegateObject.toString()
-                else -> throw RuntimeException("$method")
+                else -> throw RuntimeException(
+                    "The method `$method` is unknown. " +
+                            "Only `equals`, `hashCode` and `toString` methods are supported " +
+                            "in the `Object`-declared methods scope."
+                )
             }
             method.declaringClass.isAssignableFrom(DbBareRelation::class.java) ->
                 method.invoke(delegateObject, *(args ?: emptyArray()))
-            else -> throw RuntimeException("$method")
+            else -> throw RuntimeException(
+                "The method `$method` is unknown. " +
+                        "Only methods declared in `Object` class or " +
+                        "in `${DbBareRelation::class.simpleName}` class are supported."
+            )
         }
 
         private fun checkDelegateObjectEquality(other: DelegateInvocationHandler<*>): Boolean =

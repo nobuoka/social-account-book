@@ -29,7 +29,7 @@ class OrmContextInvocationHandler(
             if (method.declaringClass == OrmQueryContext::class.java) {
                 val operatedRelation = args?.get(0).let { relation ->
                     when (relation) {
-                        is DbBareRelation<*> -> relation.toOperatedRelation()
+                        is DbBareRelation<*> -> relation.selectAll()
                         is OperatedRelation<*> -> relation
                         else -> throw RuntimeException("Unknown")
                     }
