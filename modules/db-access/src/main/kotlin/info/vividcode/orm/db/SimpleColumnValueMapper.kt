@@ -10,14 +10,14 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
 
-class DefaultColumnValueMapper private constructor(
-    private val mappers: Map<KClass<*>, ResultTypeSpecificMapper<*>>
+class SimpleColumnValueMapper private constructor(
+    private val typeSpecificMappers: Map<KClass<*>, ResultTypeSpecificMapper<*>>
 ) : ColumnValueMapper {
 
     @Throws(SQLException::class)
     override fun mapColumnValue(resultSet: ResultSet, columnIndex: Int, expectedType: KType): Any? {
         val jvmErasureType = expectedType.jvmErasure
-        val mapper = mappers[jvmErasureType]
+        val mapper = typeSpecificMappers[jvmErasureType]
         if (mapper != null) {
             return mapper.get(resultSet, columnIndex, expectedType.isMarkedNullable)
         }
@@ -31,7 +31,7 @@ class DefaultColumnValueMapper private constructor(
     }
 
     companion object {
-        fun create(): DefaultColumnValueMapper {
+        fun create(): SimpleColumnValueMapper {
             val map = mapOf(
                 // -- Boolean --
                 Boolean::class to mapper(
@@ -65,7 +65,7 @@ class DefaultColumnValueMapper private constructor(
                     setOf(Types.VARCHAR)
                 )
             )
-            return DefaultColumnValueMapper(ConcurrentHashMap(map))
+            return SimpleColumnValueMapper(ConcurrentHashMap(map))
         }
 
         private inline fun <T, U> createResultSetGetter(
@@ -114,7 +114,7 @@ class DefaultColumnValueMapper private constructor(
                         null
                     } else {
                         throw RuntimeException(
-                            "Although JVM class defines property as non-null, DB value is NULL " +
+                            "Although JVM type is defined as non-null, DB value is NULL " +
                                     "(column index: $columnIndex)"
                         )
                     }

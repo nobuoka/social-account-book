@@ -36,7 +36,7 @@ fun <T : Any> retrieveResult(
         val mappingInfo = sqlResultInfo.tupleClassRegistry.getTupleClass(sqlResultInfo.tupleType)
         val result = mutableSetOf<T>()
         while (rs.next()) {
-            val tuple = mapTuple(mappingInfo, DefaultColumnValueMapper.create(), rs)
+            val tuple = mapTuple(mappingInfo, SimpleColumnValueMapper.create(), rs)
             result.add(tuple)
         }
         result
