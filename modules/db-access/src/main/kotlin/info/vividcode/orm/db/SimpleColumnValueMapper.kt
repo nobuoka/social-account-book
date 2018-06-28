@@ -24,7 +24,7 @@ class SimpleColumnValueMapper private constructor(
         if (jvmErasureType.java.isEnum) {
             val expectedTypeEnum = jvmErasureType.java
             return mapColumnValueToEnumValue(
-                resultSet, columnIndex, expectedTypeEnum.enumConstants, expectedType.isMarkedNullable
+                resultSet, columnIndex, expectedTypeEnum, expectedTypeEnum.enumConstants, expectedType.isMarkedNullable
             )
         }
         throw RuntimeException("Specified type not supported (type : $expectedType)")
@@ -87,11 +87,15 @@ class SimpleColumnValueMapper private constructor(
         private fun <T> mapColumnValueToEnumValue(
             resultSet: ResultSet,
             i: Int,
+            expectedType: Class<*>,
             enumConstants: Array<T>,
             nullable: Boolean
         ): T? = stringTypeMapperForEnum.get(resultSet, i, nullable)?.let { value ->
             enumConstants.find { (it as Enum<*>).name == value }
-                    ?: throw RuntimeException("Enum `$enumConstants` doesn't have value `$value`")
+                    ?: throw RuntimeException(
+                        "Enum `${expectedType.name}` doesn't have value `$value`. " +
+                                "(enum values : ${enumConstants.joinToString { "`$it`" }})"
+                    )
         }
 
         private class ResultTypeSpecificMapper<T>(

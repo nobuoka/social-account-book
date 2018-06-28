@@ -27,7 +27,8 @@ internal class SimpleColumnValueMapperTest {
 
     @AfterEach
     fun verifyMocksNoMoreInteractions() {
-        Mockito.verify(testResultSet).metaData
+        testResultSet.metaData
+        Mockito.verify(testResultSet, Mockito.atLeastOnce()).metaData
         Mockito.verifyNoMoreInteractions(testResultSet, testResultSetMetaData)
     }
 
@@ -170,6 +171,60 @@ internal class SimpleColumnValueMapperTest {
             "FOO" to TestEnum.FOO,
             null
         )
+
+    @Test
+    fun notAcceptableDbType() {
+        val exception = Assertions.assertThrows(RuntimeException::class.java) {
+            withResultSetMock(
+                testColumnIndex,
+                Types.INTEGER,
+                ResultSet::getInt,
+                columnValue = 100,
+                wasNull = false
+            ) {
+                // Act
+                columnValueMapper.mapColumnValue(testResultSet, testColumnIndex, String::class.createType())
+            }
+        }
+
+        Assertions.assertEquals(
+            "DB type is not acceptable (column type: 4, acceptable column types: [1, 12, -1, 2005])",
+            exception.message
+        )
+
+        Mockito.verify(testResultSetMetaData, Mockito.times(1)).getColumnType(Mockito.eq(testColumnIndex))
+    }
+
+    @Test
+    fun notSupportedEnumValue() {
+        val exception = Assertions.assertThrows(RuntimeException::class.java) {
+            withResultSetMock(
+                testColumnIndex,
+                Types.VARCHAR,
+                ResultSet::getString,
+                columnValue = "TEST_VALUE",
+                wasNull = false
+            ) {
+                // Act
+                columnValueMapper.mapColumnValue(testResultSet, testColumnIndex, TestEnum::class.createType())
+            }
+        }
+
+        Assertions.assertEquals(
+            "Enum `info.vividcode.orm.db.SimpleColumnValueMapperTest\$TestEnum` doesn't " +
+                    "have value `TEST_VALUE`. (enum values : `FOO`, `BAR`)",
+            exception.message
+        )
+    }
+
+    @Test
+    fun notSupportedType() {
+        val exception = Assertions.assertThrows(RuntimeException::class.java) {
+            columnValueMapper.mapColumnValue(testResultSet, testColumnIndex, Object::class.createType())
+        }
+
+        Assertions.assertEquals("Specified type not supported (type : kotlin.Any)", exception.message)
+    }
 
     private inline fun <T, R> withResultSetMock(
         testColumnIndex: Int,
