@@ -10,10 +10,11 @@ fun <T : Any> RelationPredicate<T>.toSqlWhereClause(mappingInfoRegistry: TupleCl
     when (this) {
         is RelationPredicate.Eq<T, *> -> {
             val columnName = mappingInfoRegistry.getTupleClass(this.type).findAttributeNameFromProperty(this.property)
-            WhereClause(
-                "\"$columnName\" = ?",
-                listOf(valueSetter(this@toSqlWhereClause.value))
-            )
+            WhereClause("\"$columnName\" = ?", listOf(valueSetter(this@toSqlWhereClause.value)))
+        }
+        is RelationPredicate.IsNull<T, *> -> {
+            val columnName = mappingInfoRegistry.getTupleClass(this.type).findAttributeNameFromProperty(this.property)
+            WhereClause("\"$columnName\" IS NULL", emptyList())
         }
         is RelationPredicate.Converter<T, *> -> this.condition.toSqlWhereClause(mappingInfoRegistry)
     }

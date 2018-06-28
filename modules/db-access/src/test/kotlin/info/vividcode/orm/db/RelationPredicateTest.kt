@@ -84,4 +84,15 @@ internal class RelationPredicateTest {
         Mockito.verifyNoMoreInteractions(preparedStatement)
     }
 
+    @Test
+    fun isNull() {
+        val predicate = where {
+            TestTuple.Content::test1.isNull
+        }
+
+        val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
+        Assertions.assertEquals("\"test1\" IS NULL", sqlWhereClause.whereClauseString)
+        Assertions.assertEquals(0, sqlWhereClause.valueSetterList.size)
+    }
+
 }

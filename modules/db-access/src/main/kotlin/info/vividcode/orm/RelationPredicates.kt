@@ -2,7 +2,6 @@ package info.vividcode.orm
 
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
-import kotlin.reflect.full.findAnnotation
 
 fun <T : Any> where(builder: RelationPredicateBuilder.() -> RelationPredicate<T>): RelationPredicate<T> =
     builder(RelationPredicateBuilder)
@@ -16,6 +15,9 @@ fun <T : Any, R : Any> whereOf(
 sealed class RelationPredicate<T : Any> {
 
     class Eq<T : Any, R : Any>(val type: KClass<T>, val property: KProperty1<T, R>, val value: R) :
+        RelationPredicate<T>()
+
+    class IsNull<T : Any, R>(val type: KClass<T>, val property: KProperty1<T, R>) :
         RelationPredicate<T>()
 
     class Converter<T : Any, R : Any>(val converter: (T) -> R, val condition: RelationPredicate<R>) :
@@ -43,10 +45,9 @@ object RelationPredicateBuilder {
     ): RelationPredicate<T> =
         RelationPredicate.Converter(c, builder(RelationPredicateBuilder))
 
-    val <T> KProperty1<T, Any>.isNull: String
+    inline val <reified T : Any> KProperty1<T, Any>.isNull: RelationPredicate<T>
         get() {
-            val parameterName = this.findAnnotation<ParameterName>()?.name ?: this.name
-            return "$parameterName IS NULL"
+            return RelationPredicate.IsNull(T::class, this)
         }
 
 }
