@@ -21,9 +21,18 @@ class DbBareRelationRegistry(private val tupleClassRegistry: TupleClassRegistry)
 
     fun <R : BareRelation<*>> getRelationAsBareRelationType(relationClass: KClass<R>): DbBareRelation<*> =
         relationMap.getOrPut(relationClass) {
-            val relationName = relationClass.findAnnotation<RelationName>()?.name ?: throw RuntimeException("Unknown")
-            val relationSuperType = relationClass.allSupertypes.find { it.jvmErasure == Relation::class } ?: throw RuntimeException("Unknown : $relationClass")
-            val tupleType = relationSuperType.arguments.first().type?.jvmErasure ?: throw RuntimeException("Unknown")
+            val relationName = relationClass.findAnnotation<RelationName>()?.name
+                    ?: throw RuntimeException(
+                        "`${relationClass.simpleName}` must be annotated " +
+                                "with `@${RelationName::class.simpleName}` annotation"
+                    )
+            val relationSuperType = relationClass.allSupertypes.find { it.jvmErasure == Relation::class }
+                    ?: throw RuntimeException(
+                        "`${relationClass.simpleName}` class must be " +
+                                "subclass of `${Relation::class.simpleName}`"
+                    )
+            val tupleType = relationSuperType.arguments.first().type?.jvmErasure
+                    ?: throw RuntimeException("Tuple type cannot be specified by `$relationSuperType`")
             DbBareRelation.create(relationName, relationClass, tupleType, tupleClassRegistry)
         }
 
