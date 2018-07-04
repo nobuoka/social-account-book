@@ -46,7 +46,7 @@ internal class DbBareRelationTest {
         val operatedRelation = relation.selectAll() as OperatedRelation<*>
 
         Assertions.assertEquals(
-            "SELECT FROM \"test\"",
+            "SELECT * FROM \"test\"",
             operatedRelation.sqlCommand.sqlString
         )
         Assertions.assertEquals(TestTuple::class, operatedRelation.sqlResultInfo.tupleType)
