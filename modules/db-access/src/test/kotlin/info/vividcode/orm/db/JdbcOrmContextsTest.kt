@@ -41,6 +41,9 @@ internal class JdbcOrmContextsTest {
         @Insert(returnGeneratedKeys = true)
         fun MyRelation.insertReturningGeneratedKeysInt(value: MyTuple.Content): Int
 
+        @Insert
+        fun MyRelation.insertTwoParameters(value: MyTuple.Content, value2: String)
+
         @Update
         fun MyRelation.updateReturningInt(value: MyTuple.Content, predicate: RelationPredicate<MyTuple>): Int
 
@@ -50,6 +53,9 @@ internal class JdbcOrmContextsTest {
         @Update
         fun MyRelation.updateReturningString(value: MyTuple.Content, predicate: RelationPredicate<MyTuple>): String
 
+        @Update
+        fun MyRelation.updateThreeParameters(value: MyTuple.Content, predicate: RelationPredicate<MyTuple>, value3: String)
+
         @Delete
         fun MyRelation.deleteReturningInt(predicate: RelationPredicate<MyTuple>): Int
 
@@ -58,6 +64,13 @@ internal class JdbcOrmContextsTest {
 
         @Delete
         fun MyRelation.deleteReturningString(predicate: RelationPredicate<MyTuple>): String
+
+        @Delete
+        fun MyRelation.deleteTwoParameters(predicate: RelationPredicate<MyTuple>, value2: String)
+
+        fun MyRelation.notAnnotated()
+
+        fun unknownMethod()
     }
 
     interface OrmContext : OrmQueryContext, MyRelationContext
@@ -133,6 +146,52 @@ internal class JdbcOrmContextsTest {
         }
     }
 
+    @Test
+    fun unknownBareRelationInstance() {
+        val exception = Assertions.assertThrows(RuntimeException::class.java) {
+            withOrmContext {
+                (object : MyRelationContext.MyRelation {
+                    override fun select(predicate: RelationPredicate<MyTuple>): SimpleRestrictedRelation<MyTuple> {
+                        throw RuntimeException("Exception")
+                    }
+                }).insertReturningInt(MyTuple(MyTuple.Id(1), MyTuple.Content("Test value")))
+            }
+        }
+
+        Assertions.assertEquals(
+            "Extension receiver of `insertReturningInt` is unexpected instance.",
+            exception.message
+        )
+    }
+
+    @Test
+    fun callUnknownMethod() {
+        val exception = Assertions.assertThrows(RuntimeException::class.java) {
+            withOrmContext {
+                unknownMethod()
+            }
+        }
+
+        Assertions.assertEquals(
+            "`unknownMethod` cannot be handled as function in ORM Context.",
+            exception.message
+        )
+    }
+
+    @Test
+    fun callNotAnnotatedMethod() {
+        val exception = Assertions.assertThrows(RuntimeException::class.java) {
+            withOrmContext {
+                myRelation.notAnnotated()
+            }
+        }
+
+        Assertions.assertEquals(
+            "`notAnnotated` is not annotated with `Insert`, `Update` or `Delete`.",
+            exception.message
+        )
+    }
+
     @Nested
     inner class InsertTest {
         @Test
@@ -185,6 +244,17 @@ internal class JdbcOrmContextsTest {
             }
 
             Assertions.assertEquals("`returnGeneratedKeys` method must return `Long`.", exception.message)
+        }
+
+        @Test
+        fun twoParameters() {
+            val exception = Assertions.assertThrows(RuntimeException::class.java) {
+                withOrmContext {
+                    myRelation.insertTwoParameters(MyTuple.Content("Test value"), "")
+                }
+            }
+
+            Assertions.assertEquals("`Insert` annotated method must receive single argument.", exception.message)
         }
     }
 
@@ -246,6 +316,24 @@ internal class JdbcOrmContextsTest {
                 exception.message
             )
         }
+
+        @Test
+        fun threeParameters() {
+            val exception = Assertions.assertThrows(RuntimeException::class.java) {
+                withOrmContext {
+                    myRelation.updateThreeParameters(
+                        MyTuple.Content("Test value update"),
+                        whereOf(MyTuple::id) { MyTuple.Id::value eq 10 },
+                        ""
+                    )
+                }
+            }
+
+            Assertions.assertEquals(
+                "`Update` annotated method must receive two arguments.",
+                exception.message
+            )
+        }
     }
 
     @Nested
@@ -288,6 +376,20 @@ internal class JdbcOrmContextsTest {
 
             Assertions.assertEquals(
                 "`Delete` annotated method must return `Int` or `Unit`.",
+                exception.message
+            )
+        }
+
+        @Test
+        fun twoParameters() {
+            val exception = Assertions.assertThrows(RuntimeException::class.java) {
+                withOrmContext {
+                    myRelation.deleteTwoParameters(whereOf(MyTuple::id) { MyTuple.Id::value eq 10 }, "")
+                }
+            }
+
+            Assertions.assertEquals(
+                "`Delete` annotated method must receive single argument.",
                 exception.message
             )
         }

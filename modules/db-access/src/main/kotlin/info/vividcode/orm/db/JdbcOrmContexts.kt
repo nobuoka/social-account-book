@@ -35,7 +35,8 @@ object JdbcOrmContexts {
     ) : InvocationHandler {
 
         override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {
-            val isProperty = method.kotlinFunction == null && method.returnType != null && args == null && method.name.startsWith("get")
+            val isProperty =
+                method.kotlinFunction == null && method.returnType != null && args == null && method.name.startsWith("get")
             if (isProperty) {
                 method.returnType.kotlin.asBareRelationOrNull()?.let {
                     return relationRegistry.getRelationAsRelationType(it)
@@ -133,7 +134,10 @@ object JdbcOrmContexts {
                     tupleClassRegistry, function.returnType
                 )
             }
-            else -> TODO()
+            else -> throw RuntimeException(
+                "`${function.name}` is not annotated with " +
+                        "`${Insert::class.simpleName}`, `${Update::class.simpleName}` or `${Delete::class.simpleName}`."
+            )
         } as? Any?
     }
 
