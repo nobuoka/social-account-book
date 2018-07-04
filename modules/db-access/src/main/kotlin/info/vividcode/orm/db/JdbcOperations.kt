@@ -1,23 +1,12 @@
 package info.vividcode.orm.db
 
 import info.vividcode.orm.*
-import java.lang.reflect.Proxy
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.jvmErasure
-
-fun <T : Any> createJdbcOrmContext(ormContextInterface: KClass<T>, connection: Connection): T = run {
-    val tupleClassRegistry = TupleClassRegistry.Default
-    Proxy.newProxyInstance(
-        ormContextInterface.java.classLoader,
-        arrayOf(ormContextInterface.java),
-        OrmContextInvocationHandler(tupleClassRegistry, DbBareRelationRegistry(tupleClassRegistry), connection)
-    ).let(ormContextInterface::cast)
-}
 
 fun executeQuery(
     connection: Connection,
@@ -43,6 +32,63 @@ fun <T : Any> retrieveResult(
     }
 }
 
+fun createInsertSqlCommand(
+    relationName: String,
+    insertedValue: Any,
+    tupleClassRegistry: TupleClassRegistry
+): SqlCommand {
+    val pairs = tupleClassRegistry.withTupleClass(insertedValue, TupleClass<*>::createSqlColumnNameAndValuePairs)
+
+    val columnNames = pairs.map { it.first }
+    val values = pairs.map { it.second }
+
+    return SqlCommand(
+        "INSERT INTO \"$relationName\"" +
+                " (${columnNames.joinToString(", ") { "\"$it\"" }})" +
+                " VALUES (${values.joinToString(", ") { "?" }})",
+        values.map { dd(it) }
+    )
+}
+
+fun createUpdateSqlCommand(
+    relationName: String,
+    updateValue: Any,
+    predicate: RelationPredicate<*>,
+    tupleClassRegistry: TupleClassRegistry
+): SqlCommand {
+    val pairs = tupleClassRegistry.withTupleClass(updateValue, TupleClass<*>::createSqlColumnNameAndValuePairs)
+    val columnNames = pairs.map { it.first }
+    val updateValueSetterList = pairs.map { it.second }.map { dd(it) }
+
+    val clause = predicate.toSqlWhereClause(tupleClassRegistry)
+    val whereClauseOrEmpty = clause.let { "WHERE ${it.whereClauseString}" }
+
+    val sqlString = "UPDATE \"$relationName\"" +
+            " SET ${columnNames.joinToString(", ") { "\"$it\" = ?" }}" +
+            " $whereClauseOrEmpty"
+    val sqlValueSetCallableList = clause.let { updateValueSetterList + it.valueSetterList }
+
+    return SqlCommand(sqlString, sqlValueSetCallableList)
+}
+
+fun createDeleteSqlCommand(
+    relationName: String,
+    predicate: RelationPredicate<*>,
+    tupleClassRegistry: TupleClassRegistry
+): SqlCommand {
+    val clause = predicate.toSqlWhereClause(tupleClassRegistry)
+    val whereClauseOrEmpty = clause.let { "WHERE ${it.whereClauseString}" }
+
+    val sqlString = "DELETE \"$relationName\" $whereClauseOrEmpty"
+    val sqlValueSetCallableList = clause.valueSetterList
+
+    return SqlCommand(sqlString, sqlValueSetCallableList)
+}
+
+fun dd(value: Any?): PreparedStatement.(Int) -> Unit = {
+    this.setValueAny(it, value)
+}
+
 fun insert(
     connection: Connection,
     relationName: String,
@@ -51,34 +97,89 @@ fun insert(
     returnType: KType,
     returnGeneratedKeys: Boolean
 ): Any {
-    val pairs = tupleClassRegistry.withTupleClass(insertedValue, TupleClass<*>::createSqlColumnNameAndValuePairs)
+    val insertCommand = createInsertSqlCommand(relationName, insertedValue, tupleClassRegistry)
 
-    val columnNames = pairs.map { it.first }
-    val values = pairs.map { it.second }
     val s = connection.prepareStatement(
-        "INSERT INTO \"$relationName\"" +
-                " (${columnNames.joinToString(", ") { "\"$it\"" }})" +
-                " VALUES (${values.joinToString(", ") { "?" }})",
+        insertCommand.sqlString,
         if (returnGeneratedKeys) PreparedStatement.RETURN_GENERATED_KEYS else 0
     )
-    values.forEachIndexed { index, any ->
-        s.setValueAny(index + 1, any)
-    }
+    insertCommand.sqlValueSetterList.forEachIndexed { index, function -> function(s, index + 1) }
 
     s.executeUpdate()
 
-    val id = if (returnGeneratedKeys) {
-        s.generatedKeys.let {
+    return if (returnGeneratedKeys) {
+        val id = s.generatedKeys.let {
             it.next()
             it.getLong(1)
         }
+        when (returnType.jvmErasure) {
+            Long::class -> id
+            else ->
+                throw RuntimeException(
+                    "`${Insert::returnGeneratedKeys.name}` method must return `${Long::class.simpleName}`."
+                )
+        }
     } else {
-        0L
+        when (returnType.jvmErasure) {
+            Int::class -> s.updateCount
+            Unit::class -> Unit
+            else ->
+                throw RuntimeException(
+                    "Non `${Insert::returnGeneratedKeys.name}` method must " +
+                            "return `${Int::class.simpleName}` or `${Unit::class.simpleName}`."
+                )
+        }
     }
+}
+
+fun update(
+    connection: Connection,
+    relationName: String,
+    updateValue: Any,
+    predicate: RelationPredicate<*>,
+    tupleClassRegistry: TupleClassRegistry,
+    returnType: KType
+): Any {
+    val updateCommand = createUpdateSqlCommand(relationName, updateValue, predicate, tupleClassRegistry)
+
+    val s = connection.prepareStatement(updateCommand.sqlString)
+    updateCommand.sqlValueSetterList.forEachIndexed { index, function -> function(s, index + 1) }
+
+    s.executeUpdate()
 
     return when (returnType.jvmErasure) {
-        Long::class -> id
-        else -> throw RuntimeException()
+        Int::class -> s.updateCount
+        Unit::class -> Unit
+        else ->
+            throw RuntimeException(
+                "`${Update::class.simpleName}` annotated method must " +
+                        "return `${Int::class.simpleName}` or `${Unit::class.simpleName}`."
+            )
+    }
+}
+
+fun delete(
+    connection: Connection,
+    relationName: String,
+    predicate: RelationPredicate<*>,
+    tupleClassRegistry: TupleClassRegistry,
+    returnType: KType
+): Any {
+    val deleteCommand = createDeleteSqlCommand(relationName, predicate, tupleClassRegistry)
+
+    val s = connection.prepareStatement(deleteCommand.sqlString)
+    deleteCommand.sqlValueSetterList.forEachIndexed { index, function -> function(s, index + 1) }
+
+    s.executeUpdate()
+
+    return when (returnType.jvmErasure) {
+        Int::class -> s.updateCount
+        Unit::class -> Unit
+        else ->
+            throw RuntimeException(
+                "`${Delete::class.simpleName}` annotated method must " +
+                        "return `${Int::class.simpleName}` or `${Unit::class.simpleName}`."
+            )
     }
 }
 

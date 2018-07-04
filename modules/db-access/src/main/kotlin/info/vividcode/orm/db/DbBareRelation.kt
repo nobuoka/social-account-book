@@ -17,7 +17,7 @@ interface DbBareRelation<T : Any> : BareRelation<T> {
 
     fun selectAll(): OperatedRelation<T> =
         OperatedRelation(
-            SqlCommand("SELECT FROM \"$relationName\"", emptyList()),
+            SqlCommand("SELECT * FROM \"$relationName\"", emptyList()),
             SqlResultInfo(tupleType, tupleClassRegistry)
         )
 

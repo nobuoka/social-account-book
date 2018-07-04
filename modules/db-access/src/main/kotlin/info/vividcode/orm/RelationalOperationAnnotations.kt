@@ -1,7 +1,9 @@
 package info.vividcode.orm
 
 @Target(AnnotationTarget.FUNCTION)
-annotation class Insert()
+annotation class Insert(
+    val returnGeneratedKeys: Boolean = false
+)
 
 @Target(AnnotationTarget.FUNCTION)
 annotation class Update()
