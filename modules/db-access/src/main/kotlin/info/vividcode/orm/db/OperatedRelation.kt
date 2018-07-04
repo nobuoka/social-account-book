@@ -8,16 +8,6 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import kotlin.reflect.KClass
 
-class SqlCommand(
-    val sqlString: String,
-    val sqlValueSetterList: List<PreparedStatement.(Int) -> Unit>
-)
-
-class SqlResultInfo<T : Any>(
-    val tupleType: KClass<T>,
-    val tupleClassRegistry: TupleClassRegistry
-)
-
 open class OperatedRelation<T : Any>(
     val sqlCommand: SqlCommand,
     val sqlResultInfo: SqlResultInfo<T>
