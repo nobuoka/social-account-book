@@ -1,6 +1,7 @@
 package info.vividcode.orm.db
 
 import info.vividcode.orm.*
+import kotlinx.coroutines.experimental.CoroutineDispatcher
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
@@ -26,6 +27,12 @@ object JdbcOrmContexts {
                 connection
             )
         ).let(ormContextInterface::cast)
+    }
+
+    fun <T : Any> createProviderFactoryFor(
+        ormContextInterface: KClass<T>, jdbcCoroutineContext: CoroutineDispatcher
+    ): (Connection) -> OrmContextProvider<T> = {
+        JdbcOrmContextProvider(ormContextInterface, it, jdbcCoroutineContext)
     }
 
     private class OrmContextInvocationHandler(

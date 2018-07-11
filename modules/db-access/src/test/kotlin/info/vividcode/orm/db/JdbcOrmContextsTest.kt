@@ -1,6 +1,7 @@
 package info.vividcode.orm.db
 
 import info.vividcode.orm.*
+import org.h2.jdbcx.JdbcDataSource
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
