@@ -2,5 +2,6 @@ rootProject.name = 'sbs'
 include 'app'
 include 'modules:sbs-main'
 
+include 'modules:db-access'
 include 'modules:ktor-twitter-login'
 include 'modules:whatwg-url'
