@@ -6,6 +6,7 @@ buildscript {
     ext.junit_version = '5.2.0'
     ext.okhttp_version = '3.11.0'
     ext.mockito_version = '2.19.1'
+    ext.h2db_version = '1.4.197'
 
     repositories {
         mavenCentral()
