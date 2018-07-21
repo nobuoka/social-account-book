@@ -28,12 +28,41 @@ import okhttp3.logging.HttpLoggingInterceptor
 import java.time.Clock
 import java.util.*
 import kotlin.coroutines.experimental.CoroutineContext
+import com.zaxxer.hikari.HikariDataSource
+import info.vividcode.orm.db.JdbcOrmContexts
+import info.vividcode.orm.db.JdbcTransactionManager
+import info.vividcode.sbs.main.application.CreateNewSessionService
+import info.vividcode.sbs.main.application.DeleteSessionService
+import info.vividcode.sbs.main.application.RetrieveActorUserService
+import info.vividcode.sbs.main.database.*
+import info.vividcode.sbs.main.infrastructure.web.appendCookieSessionId
+import info.vividcode.sbs.main.infrastructure.web.clearCookieSessionId
+import info.vividcode.sbs.main.infrastructure.web.getCookieSessionIdOrNull
+import io.ktor.request.ApplicationRequest
+import io.ktor.routing.post
+import org.flywaydb.core.Flyway
 
 fun Application.setup(env: Env? = null) {
+    val appContextUrl = environment.config.property("sbs.contextUrl").getString()
+    val appDatabaseJdbcUrl = environment.config.property("sbs.databaseJdbcUrl").getString()
     val twitterClientCredentials = environment.config.config("sbs.twitter.clientCredential").let {
         ClientCredential(it.property("identifier").getString(), it.property("sharedSecret").getString())
     }
-    val appContextUrl = environment.config.property("sbs.contextUrl").getString()
+
+    val appDataSource = HikariDataSource().apply {
+        jdbcUrl = appDatabaseJdbcUrl
+        isAutoCommit = false
+    }
+
+    val flyway = Flyway()
+    flyway.dataSource = appDataSource
+    flyway.migrate()
+
+    val dbAccessContexts = newFixedThreadPoolContext(4, "DbAccess")
+    val transactionManager = JdbcTransactionManager(
+        JdbcOrmContexts.createProviderFactoryFor(AppOrmContext::class, dbAccessContexts),
+        appDataSource
+    )
 
     val envNotNull = env
             ?: object : Env {
@@ -46,8 +75,12 @@ fun Application.setup(env: Env? = null) {
                     .build()
                 override val httpCallContext: CoroutineContext = newFixedThreadPoolContext(4, "HttpCall")
                 override val temporaryCredentialStore: TemporaryCredentialStore =
-                    TemporaryCredentialStore.OnMemoryTemporaryCredentialStore
+                    TemporaryCredentialStoreImpl(transactionManager)
             }
+
+    val retrieveActorUserService = RetrieveActorUserService(transactionManager)
+    val createNewSessionService = CreateNewSessionService(transactionManager)
+    val deleteSessionService = DeleteSessionService(transactionManager)
 
     intercept(ApplicationCallPipeline.Call) {
         try {
@@ -58,6 +91,11 @@ fun Application.setup(env: Env? = null) {
         }
     }
 
+    suspend fun ApplicationRequest.getActorUserOrNull(): UserTuple? =
+        getCookieSessionIdOrNull()?.let { sessionId ->
+            retrieveActorUserService.retrieveActorUserOrNull(sessionId)
+        }
+
     routing {
         staticBasePackage = "sbs.main"
         static("static") {
@@ -65,18 +103,28 @@ fun Application.setup(env: Env? = null) {
         }
 
         get(UrlPaths.top) {
-            call.respondWrite(Html, OK, withHtmlDoctype(topHtml(UrlPaths.TwitterLogin.start)))
+            val actorUserOrNull = call.request.getActorUserOrNull()
+            val htmlOutput = withHtmlDoctype(topHtml(actorUserOrNull, UrlPaths.TwitterLogin.start, UrlPaths.logout))
+            call.respondWrite(Html, OK, htmlOutput)
+        }
+
+        post(UrlPaths.logout) {
+            call.request.getCookieSessionIdOrNull()?.let { deleteSessionService.deleteSession(it) }
+            call.response.clearCookieSessionId()
+            call.respondRedirect(UrlPaths.top, false)
         }
 
         setupTwitterLogin(
             UrlPaths.TwitterLogin.start, UrlPaths.TwitterLogin.callback,
             appContextUrl, twitterClientCredentials, envNotNull,
             object : OutputPort {
-                override val success: OutputInterceptor<TwitterToken> = {
+                override val success: OutputInterceptor<TwitterToken> = { token ->
+                    val sessionId =
+                        createNewSessionService.createNewSessionByTwitterLogin(token.userId.toLong(), token.screenName)
+                    call.response.appendCookieSessionId(sessionId)
                     call.respondRedirect(UrlPaths.top, false)
                 }
                 override val twitterCallFailed: OutputInterceptor<TwitterCallFailedException> = {
-                    it.printStackTrace()
                     call.respond(HttpStatusCode.BadGateway, "Failed to request for Twitter")
                 }
                 override val temporaryCredentialNotFound: OutputInterceptor<TemporaryCredentialNotFoundException> = {

@@ -1,6 +1,6 @@
 package info.vividcode.orm
 
-interface TransactionManager<T> {
+interface TransactionManager<out T> {
 
     suspend fun <R> withTransaction(execute: suspend (T) -> R): R
 
