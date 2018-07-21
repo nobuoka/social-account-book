@@ -46,7 +46,7 @@ fun createInsertSqlCommand(
         "INSERT INTO \"$relationName\"" +
                 " (${columnNames.joinToString(", ") { "\"$it\"" }})" +
                 " VALUES (${values.joinToString(", ") { "?" }})",
-        values.map { dd(it) }
+        values.map(::createSqlValueSetter)
     )
 }
 
@@ -58,7 +58,7 @@ fun createUpdateSqlCommand(
 ): SqlCommand {
     val pairs = tupleClassRegistry.withTupleClass(updateValue, TupleClass<*>::createSqlColumnNameAndValuePairs)
     val columnNames = pairs.map { it.first }
-    val updateValueSetterList = pairs.map { it.second }.map { dd(it) }
+    val updateValueSetterList = pairs.map { it.second }.map(::createSqlValueSetter)
 
     val clause = predicate.toSqlWhereClause(tupleClassRegistry)
     val whereClauseOrEmpty = clause.let { "WHERE ${it.whereClauseString}" }
@@ -85,7 +85,7 @@ fun createDeleteSqlCommand(
     return SqlCommand(sqlString, sqlValueSetCallableList)
 }
 
-fun dd(value: Any?): PreparedStatement.(Int) -> Unit = {
+private fun createSqlValueSetter(value: Any?): PreparedStatement.(Int) -> Unit = {
     this.setValueAny(it, value)
 }
 
