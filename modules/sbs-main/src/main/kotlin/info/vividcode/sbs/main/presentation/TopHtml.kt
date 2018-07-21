@@ -1,10 +1,10 @@
 package info.vividcode.sbs.main.presentation
 
-import info.vividcode.sbs.main.database.UserTuple
+import info.vividcode.sbs.main.core.domain.User
 import kotlinx.html.*
 
 fun topHtml(
-    actor: UserTuple?,
+    actor: User?,
     twitterLoginPath: String,
     logoutPath: String
 ): suspend TagConsumer<*>.() -> Unit = {
@@ -19,7 +19,7 @@ fun topHtml(
 
             if (actor != null) {
                 div {
-                    span { +"User : ${actor.content.displayName}" }
+                    span { +"User : ${actor.displayName}" }
                 }
                 form(method = FormMethod.post, action = logoutPath) {
                     submitInput {

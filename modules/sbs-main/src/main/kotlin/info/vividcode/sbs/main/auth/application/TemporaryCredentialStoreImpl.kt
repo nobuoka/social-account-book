@@ -1,25 +1,34 @@
-package info.vividcode.sbs.main
+package info.vividcode.sbs.main.auth.application
 
 import info.vividcode.ktor.twitter.login.TemporaryCredential
 import info.vividcode.ktor.twitter.login.TemporaryCredentialStore
 import info.vividcode.orm.OrmContextProvider
 import info.vividcode.orm.TransactionManager
 import info.vividcode.orm.where
-import info.vividcode.sbs.main.database.TwitterTemporaryCredentialTuple
-import info.vividcode.sbs.main.database.TwitterTemporaryCredentialsContext
+import info.vividcode.sbs.main.auth.domain.infrastructure.AuthOrmContext
+import info.vividcode.sbs.main.auth.domain.infrastructure.TwitterTemporaryCredentialTuple
 
 internal class TemporaryCredentialStoreImpl(
-    private val transactionManager: TransactionManager<OrmContextProvider<TwitterTemporaryCredentialsContext>>
+    private val transactionManager: TransactionManager<OrmContextProvider<AuthOrmContext>>
 ) : TemporaryCredentialStore {
 
     override suspend fun saveTemporaryCredential(temporaryCredential: TemporaryCredential) {
         val value = TwitterTemporaryCredentialTuple(
             temporaryCredential.token,
-            temporaryCredential.secret
+            TwitterTemporaryCredentialTuple.Content(temporaryCredential.secret)
         )
         transactionManager.withTransaction { tx ->
             tx.withOrmContext {
-                twitterTemporaryCredentials.insert(value)
+                val selected = twitterTemporaryCredentials.select(where {
+                    TwitterTemporaryCredentialTuple::identifier eq value.identifier
+                }).forUpdate().firstOrNull()
+                if (selected == null) {
+                    twitterTemporaryCredentials.insert(value)
+                } else {
+                    twitterTemporaryCredentials.update(value.content, where {
+                        TwitterTemporaryCredentialTuple::identifier eq value.identifier
+                    })
+                }
             }
         }
     }
@@ -31,7 +40,7 @@ internal class TemporaryCredentialStoreImpl(
                     .toSet().firstOrNull()?.let {
                         TemporaryCredential(
                             it.identifier,
-                            it.sharedSecret
+                            it.content.sharedSecret
                         )
                     }
             }

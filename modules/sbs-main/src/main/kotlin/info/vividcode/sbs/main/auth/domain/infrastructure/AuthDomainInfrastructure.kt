@@ -1,18 +1,13 @@
-package info.vividcode.sbs.main.database
+package info.vividcode.sbs.main.auth.domain.infrastructure
 
 import info.vividcode.orm.*
 
-interface AppOrmContext : OrmQueryContext, MyOrmContext, TwitterTemporaryCredentialsContext
+interface AuthOrmContext : OrmQueryContext {
 
-interface MyOrmContext {
-
-    val users: UsersRelation
     val loginSessions: LoginSessionsRelation
     val twitterUsers: TwitterUsersRelation
     val twitterUserConnectionsRelation: TwitterUserConnectionsRelation
-
-    @Insert(returnGeneratedKeys = true)
-    fun UsersRelation.insert(content: UserTuple.Content): Long
+    val twitterTemporaryCredentials: TwitterTemporaryCredentialsRelation
 
     @Insert(returnGeneratedKeys = true)
     fun LoginSessionsRelation.insert(content: LoginSessionTuple.Content): Long
@@ -26,16 +21,14 @@ interface MyOrmContext {
     @Insert
     fun TwitterUserConnectionsRelation.insert(content: TwitterUserConnectionTuple)
 
-}
+    @Insert
+    fun TwitterTemporaryCredentialsRelation.insert(credential: TwitterTemporaryCredentialTuple)
 
-@RelationName("users")
-interface UsersRelation : BareRelation<UserTuple>
+    @Update
+    fun TwitterTemporaryCredentialsRelation.update(
+        value: TwitterTemporaryCredentialTuple.Content, predicate: RelationPredicate<TwitterTemporaryCredentialTuple>
+    )
 
-data class UserTuple(
-    @AttributeName("id") val id: Long,
-    val content: Content
-) {
-    data class Content(@AttributeName("display_name") val displayName: String)
 }
 
 @RelationName("login_sessions")
@@ -63,3 +56,15 @@ data class TwitterUserTuple(
     @AttributeName("twitter_user_id") val twitterUserId: Long,
     @AttributeName("twitter_user_name") val twitterUserName: String
 )
+
+@RelationName("twitter_temporary_credentials")
+interface TwitterTemporaryCredentialsRelation : BareRelation<TwitterTemporaryCredentialTuple>
+
+data class TwitterTemporaryCredentialTuple(
+    @AttributeName("identifier") val identifier: String,
+    val content: Content
+) {
+    data class Content(
+        @AttributeName("shared_secret") val sharedSecret: String
+    )
+}

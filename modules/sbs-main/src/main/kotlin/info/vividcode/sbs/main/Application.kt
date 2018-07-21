@@ -29,12 +29,14 @@ import java.time.Clock
 import java.util.*
 import kotlin.coroutines.experimental.CoroutineContext
 import com.zaxxer.hikari.HikariDataSource
-import info.vividcode.orm.db.JdbcOrmContexts
-import info.vividcode.orm.db.JdbcTransactionManager
-import info.vividcode.sbs.main.application.CreateNewSessionService
-import info.vividcode.sbs.main.application.DeleteSessionService
-import info.vividcode.sbs.main.application.RetrieveActorUserService
-import info.vividcode.sbs.main.database.*
+import info.vividcode.sbs.main.auth.application.CreateNewSessionService
+import info.vividcode.sbs.main.auth.application.DeleteSessionService
+import info.vividcode.sbs.main.auth.application.RetrieveActorUserService
+import info.vividcode.sbs.main.auth.application.TemporaryCredentialStoreImpl
+import info.vividcode.sbs.main.core.application.CreateUserService
+import info.vividcode.sbs.main.core.application.FindUserService
+import info.vividcode.sbs.main.core.domain.User
+import info.vividcode.sbs.main.infrastructure.database.createTransactionManager
 import info.vividcode.sbs.main.infrastructure.web.appendCookieSessionId
 import info.vividcode.sbs.main.infrastructure.web.clearCookieSessionId
 import info.vividcode.sbs.main.infrastructure.web.getCookieSessionIdOrNull
@@ -58,11 +60,7 @@ fun Application.setup(env: Env? = null) {
     flyway.dataSource = appDataSource
     flyway.migrate()
 
-    val dbAccessContexts = newFixedThreadPoolContext(4, "DbAccess")
-    val transactionManager = JdbcTransactionManager(
-        JdbcOrmContexts.createProviderFactoryFor(AppOrmContext::class, dbAccessContexts),
-        appDataSource
-    )
+    val transactionManager = createTransactionManager(appDataSource)
 
     val envNotNull = env
             ?: object : Env {
@@ -78,8 +76,10 @@ fun Application.setup(env: Env? = null) {
                     TemporaryCredentialStoreImpl(transactionManager)
             }
 
-    val retrieveActorUserService = RetrieveActorUserService(transactionManager)
-    val createNewSessionService = CreateNewSessionService(transactionManager)
+    val findUerService = FindUserService.create(transactionManager)
+    val createUserService = CreateUserService.create(transactionManager)
+    val retrieveActorUserService = RetrieveActorUserService(transactionManager, findUerService)
+    val createNewSessionService = CreateNewSessionService(transactionManager, findUerService, createUserService)
     val deleteSessionService = DeleteSessionService(transactionManager)
 
     intercept(ApplicationCallPipeline.Call) {
@@ -91,7 +91,7 @@ fun Application.setup(env: Env? = null) {
         }
     }
 
-    suspend fun ApplicationRequest.getActorUserOrNull(): UserTuple? =
+    suspend fun ApplicationRequest.getActorUserOrNull(): User? =
         getCookieSessionIdOrNull()?.let { sessionId ->
             retrieveActorUserService.retrieveActorUserOrNull(sessionId)
         }

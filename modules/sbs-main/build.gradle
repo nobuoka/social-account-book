@@ -27,4 +27,9 @@ dependencies {
 
     implementation 'com.zaxxer:HikariCP:3.1.0'
     implementation 'org.flywaydb:flyway-core:5.1.4'
+
+    testCompileOnly("org.junit.jupiter:junit-jupiter-api:$junit_version")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:$junit_version")
+
+    testImplementation "com.h2database:h2:$h2db_version"
 }
