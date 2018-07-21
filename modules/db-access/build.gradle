@@ -25,7 +25,7 @@ dependencies {
 
     testCompileOnly("org.junit.jupiter:junit-jupiter-api:$junit_version")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:$junit_version")
-    testImplementation "org.mockito:mockito-core:2.19.0"
+    testImplementation "org.mockito:mockito-core:$mockito_version"
 
     testImplementation 'com.h2database:h2:1.4.197'
     testImplementation 'org.slf4j:slf4j-api:1.7.25'
