@@ -79,7 +79,7 @@ fun createDeleteSqlCommand(
     val clause = predicate.toSqlWhereClause(tupleClassRegistry)
     val whereClauseOrEmpty = clause.let { "WHERE ${it.whereClauseString}" }
 
-    val sqlString = "DELETE \"$relationName\" $whereClauseOrEmpty"
+    val sqlString = "DELETE FROM \"$relationName\" $whereClauseOrEmpty"
     val sqlValueSetCallableList = clause.valueSetterList
 
     return SqlCommand(sqlString, sqlValueSetCallableList)
