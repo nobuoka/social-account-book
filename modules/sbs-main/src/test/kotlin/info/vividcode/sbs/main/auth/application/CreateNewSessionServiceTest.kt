@@ -1,6 +1,7 @@
 package info.vividcode.sbs.main.auth.application
 
 import info.vividcode.orm.where
+import info.vividcode.sbs.main.ApplicationInternalException
 import info.vividcode.sbs.main.H2DatabaseTestExtension
 import info.vividcode.sbs.main.auth.domain.infrastructure.LoginSessionTuple
 import info.vividcode.sbs.main.auth.domain.infrastructure.TwitterUserConnectionTuple
@@ -86,6 +87,32 @@ internal class CreateNewSessionServiceTest {
         }
         Assertions.assertNotNull(sessionTuple)
         Assertions.assertEquals(sessionId.value, sessionTuple?.id)
+    }
+
+    @Test
+    internal fun twitterAccountAlreadyConnected_dataInconsistency(): Unit = runBlocking {
+        val testScreenName = "test_user"
+        val testUserId = 1001L
+        val testTwitterId = 2001L
+
+        // Arrange
+        txManager.withTransaction { tx ->
+            tx.withOrmContext {
+                twitterUsers.insert(TwitterUserTuple(testTwitterId, testScreenName))
+                twitterUserConnectionsRelation.insert(TwitterUserConnectionTuple(testUserId, testTwitterId))
+            }
+        }
+        coEvery { mockFindUserService.findUser(testUserId) } returns null
+
+        // Act
+        val exception = Assertions.assertThrows(ApplicationInternalException.DataInconsistency::class.java) {
+            runBlocking {
+                testTarget.createNewSessionByTwitterLogin(testTwitterId, testScreenName)
+            }
+        }
+
+        // Assert
+        Assertions.assertEquals("Data inconsistency (user[id = 1001] not found)", exception.message)
     }
 
 }
