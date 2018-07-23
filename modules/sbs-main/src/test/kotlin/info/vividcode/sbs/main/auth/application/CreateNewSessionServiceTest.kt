@@ -25,6 +25,8 @@ internal class CreateNewSessionServiceTest {
         @JvmField
         @RegisterExtension
         val h2DatabaseTestExtension = H2DatabaseTestExtension()
+
+        private const val testScreenName = "test_user"
     }
 
     @BeforeEach
@@ -43,8 +45,6 @@ internal class CreateNewSessionServiceTest {
 
     @Test
     internal fun twitterAccountNotConnectedYet(): Unit = runBlocking {
-        val testScreenName = "test_user"
-
         // Arrange
         coEvery { mockCreateUserService.createUser(testScreenName) } returns User(1001, testScreenName)
 
@@ -63,7 +63,6 @@ internal class CreateNewSessionServiceTest {
 
     @Test
     internal fun twitterAccountAlreadyConnected(): Unit = runBlocking {
-        val testScreenName = "test_user"
         val testUserId = 1001L
         val testTwitterId = 2001L
 
@@ -91,7 +90,6 @@ internal class CreateNewSessionServiceTest {
 
     @Test
     internal fun twitterAccountAlreadyConnected_dataInconsistency(): Unit = runBlocking {
-        val testScreenName = "test_user"
         val testUserId = 1001L
         val testTwitterId = 2001L
 
