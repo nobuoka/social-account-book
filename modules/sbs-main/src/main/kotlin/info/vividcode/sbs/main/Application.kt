@@ -2,6 +2,7 @@
 
 package info.vividcode.sbs.main
 
+import com.zaxxer.hikari.HikariDataSource
 import info.vividcode.ktor.twitter.login.*
 import info.vividcode.ktor.twitter.login.application.TemporaryCredentialNotFoundException
 import info.vividcode.ktor.twitter.login.application.TwitterCallFailedException
@@ -25,15 +26,26 @@ import io.ktor.routing.routing
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.flywaydb.core.Flyway
 import java.time.Clock
 import java.util.*
 import kotlin.coroutines.experimental.CoroutineContext
 
 fun Application.setup(env: Env? = null) {
+    val appContextUrl = environment.config.property("sbs.contextUrl").getString()
+    val appDatabaseJdbcUrl = "jdbc:h2:mem:sbs_dev;TRACE_LEVEL_FILE=4"
     val twitterClientCredentials = environment.config.config("sbs.twitter.clientCredential").let {
         ClientCredential(it.property("identifier").getString(), it.property("sharedSecret").getString())
     }
-    val appContextUrl = environment.config.property("sbs.contextUrl").getString()
+
+    val appDataSource = HikariDataSource().apply {
+        jdbcUrl = appDatabaseJdbcUrl
+        isAutoCommit = false
+    }
+
+    val flyway = Flyway()
+    flyway.dataSource = appDataSource
+    flyway.migrate()
 
     val envNotNull = env
             ?: object : Env {

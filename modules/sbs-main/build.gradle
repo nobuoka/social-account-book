@@ -30,6 +30,7 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
     implementation "com.squareup.okhttp3:logging-interceptor:$okhttp_version"
 
+    implementation 'com.zaxxer:HikariCP:3.1.0'
     implementation 'org.flywaydb:flyway-core:5.1.4'
 
     testCompileOnly "org.junit.jupiter:junit-jupiter-api:$junit_version"
