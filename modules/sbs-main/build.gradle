@@ -35,5 +35,7 @@ dependencies {
     testCompileOnly "org.junit.jupiter:junit-jupiter-api:$junit_version"
     testRuntime "org.junit.jupiter:junit-jupiter-engine:$junit_version"
 
+    testImplementation "io.mockk:mockk:$mockk_version"
+
     testImplementation "com.h2database:h2:$h2db_version"
 }
