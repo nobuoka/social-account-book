@@ -7,6 +7,7 @@ import info.vividcode.ktor.twitter.login.*
 import info.vividcode.ktor.twitter.login.application.TemporaryCredentialNotFoundException
 import info.vividcode.ktor.twitter.login.application.TwitterCallFailedException
 import info.vividcode.oauth.OAuth
+import info.vividcode.sbs.main.auth.application.TemporaryCredentialStoreImpl
 import info.vividcode.sbs.main.presentation.topHtml
 import info.vividcode.sbs.main.presentation.withHtmlDoctype
 import io.ktor.application.Application
@@ -30,6 +31,7 @@ import org.flywaydb.core.Flyway
 import java.time.Clock
 import java.util.*
 import kotlin.coroutines.experimental.CoroutineContext
+import info.vividcode.sbs.main.infrastructure.database.createTransactionManager
 
 fun Application.setup(env: Env? = null) {
     val appContextUrl = environment.config.property("sbs.contextUrl").getString()
@@ -47,6 +49,8 @@ fun Application.setup(env: Env? = null) {
     flyway.dataSource = appDataSource
     flyway.migrate()
 
+    val transactionManager = createTransactionManager(appDataSource)
+
     val envNotNull = env
             ?: object : Env {
                 override val oauth: info.vividcode.oauth.OAuth = OAuth(object : OAuth.Env {
@@ -58,7 +62,7 @@ fun Application.setup(env: Env? = null) {
                     .build()
                 override val httpCallContext: CoroutineContext = newFixedThreadPoolContext(4, "HttpCall")
                 override val temporaryCredentialStore: TemporaryCredentialStore =
-                    TemporaryCredentialStore.OnMemoryTemporaryCredentialStore
+                    TemporaryCredentialStoreImpl(transactionManager)
             }
 
     intercept(ApplicationCallPipeline.Call) {
