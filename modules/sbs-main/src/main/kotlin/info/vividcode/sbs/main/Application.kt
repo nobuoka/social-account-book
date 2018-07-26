@@ -8,9 +8,12 @@ import info.vividcode.ktor.twitter.login.application.TemporaryCredentialNotFound
 import info.vividcode.ktor.twitter.login.application.TwitterCallFailedException
 import info.vividcode.oauth.OAuth
 import info.vividcode.sbs.main.auth.application.CreateNewSessionService
+import info.vividcode.sbs.main.auth.application.DeleteSessionService
+import info.vividcode.sbs.main.auth.application.RetrieveActorUserService
 import info.vividcode.sbs.main.auth.application.TemporaryCredentialStoreImpl
 import info.vividcode.sbs.main.core.application.CreateUserService
 import info.vividcode.sbs.main.core.application.FindUserService
+import info.vividcode.sbs.main.core.domain.User
 import info.vividcode.sbs.main.infrastructure.database.createTransactionManager
 import info.vividcode.sbs.main.infrastructure.web.SessionCookieHandler
 import info.vividcode.sbs.main.presentation.topHtml
@@ -24,10 +27,12 @@ import io.ktor.content.staticBasePackage
 import io.ktor.http.ContentType.Text.Html
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.OK
+import io.ktor.request.ApplicationRequest
 import io.ktor.response.respond
 import io.ktor.response.respondRedirect
 import io.ktor.response.respondWrite
 import io.ktor.routing.get
+import io.ktor.routing.post
 import io.ktor.routing.routing
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import okhttp3.OkHttpClient
@@ -73,7 +78,9 @@ fun Application.setup(env: Env? = null) {
 
     val findUerService = FindUserService.create(transactionManager)
     val createUserService = CreateUserService.create(transactionManager)
+    val retrieveActorUserService = RetrieveActorUserService(transactionManager, findUerService)
     val createNewSessionService = CreateNewSessionService(transactionManager, findUerService, createUserService)
+    val deleteSessionService = DeleteSessionService(transactionManager)
 
     intercept(ApplicationCallPipeline.Call) {
         try {
@@ -86,6 +93,11 @@ fun Application.setup(env: Env? = null) {
 
     val sessionCookieHandler = SessionCookieHandler(appSessionEncryptionKey, appSessionSignKey)
 
+    suspend fun ApplicationRequest.getActorUserOrNull(): User? =
+        sessionCookieHandler.getCookieSessionIdOrNull(call.request)?.let { sessionId ->
+            retrieveActorUserService.retrieveActorUserOrNull(sessionId)
+        }
+
     routing {
         staticBasePackage = "sbs.main"
         static("static") {
@@ -93,7 +105,17 @@ fun Application.setup(env: Env? = null) {
         }
 
         get(UrlPaths.top) {
-            call.respondWrite(Html, OK, withHtmlDoctype(topHtml(UrlPaths.TwitterLogin.start)))
+            val actorUserOrNull = call.request.getActorUserOrNull()
+            val htmlOutput = withHtmlDoctype(topHtml(actorUserOrNull, UrlPaths.TwitterLogin.start, UrlPaths.logout))
+            call.respondWrite(Html, OK, htmlOutput)
+        }
+
+        post(UrlPaths.logout) {
+            sessionCookieHandler.getCookieSessionIdOrNull(call.request)?.let {
+                deleteSessionService.deleteSession(it)
+            }
+            sessionCookieHandler.clearCookieSessionId(call.response)
+            call.respondRedirect(UrlPaths.top, false)
         }
 
         setupTwitterLogin(
