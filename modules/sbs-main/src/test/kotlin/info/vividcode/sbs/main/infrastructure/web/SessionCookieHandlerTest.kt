@@ -33,6 +33,10 @@ internal class SessionCookieHandlerTest {
                 "%3A66026618b373c60b5e67b420751c861834efd14f4f935a584c9dac9d885efca0; " +
                 "Max-Age=604800; Path=/; \$x-enc=URI_ENCODING"
 
+    private val testSessionCookieValueByAnotherEncryptKey =
+        "10101010101010101010101010101010%2F08d6532aaf7c13685f02878bfe1d530d" +
+                "%3A66026618b373c60b5e67b420751c861834efd14f4f935a584c9dac9d885efca0"
+
     private fun Application.test(interceptor: PipelineInterceptor<Unit, ApplicationCall>) {
         intercept(ApplicationCallPipeline.Call, interceptor)
     }
@@ -115,6 +119,24 @@ internal class SessionCookieHandlerTest {
             addHeader(
                 cookieHeaderName,
                 "test-session=10101010101010101010101010101010%2F683c4d98ebd16578e99d74140cb05fe1%3Avalue"
+            )
+        }) {
+            assertEquals(nullSessionId, response.headers[testSessionIdHeaderName])
+        }
+
+        with(handleRequest(HttpMethod.Post, "/") {
+            addHeader(
+                cookieHeaderName,
+                "test-session=10101010101010101010101010101%2F683c4d98ebd16578e99d74140cb05fe1%3Avalue"
+            )
+        }) {
+            assertEquals(nullSessionId, response.headers[testSessionIdHeaderName])
+        }
+
+        with(handleRequest(HttpMethod.Post, "/") {
+            addHeader(
+                cookieHeaderName,
+                "test-session=$testSessionCookieValueByAnotherEncryptKey"
             )
         }) {
             assertEquals(nullSessionId, response.headers[testSessionIdHeaderName])
