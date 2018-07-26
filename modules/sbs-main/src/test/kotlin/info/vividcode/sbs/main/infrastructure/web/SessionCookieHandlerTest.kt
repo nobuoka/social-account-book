@@ -15,7 +15,12 @@ import org.junit.jupiter.api.Test
 
 internal class SessionCookieHandlerTest {
 
-    private val testSessionCookieName = "test-session"
+    companion object {
+        private const val cookieHeaderName = "Cookie"
+        private const val setCookieHeaderName = "Set-Cookie"
+        private const val testSessionCookieName = "test-session"
+        private const val testSessionIdHeaderName = "Session-Id"
+    }
 
     private val handler = SessionCookieHandler(
         "0123456789ABCDEF".toByteArray(),
@@ -41,7 +46,7 @@ internal class SessionCookieHandlerTest {
         with(handleRequest(HttpMethod.Post, "/")) {
             assertEquals(
                 listOf(testSessionCookie),
-                response.headers.values("Set-Cookie")
+                response.headers.values(setCookieHeaderName)
             )
         }
     }
@@ -55,7 +60,7 @@ internal class SessionCookieHandlerTest {
         with(handleRequest(HttpMethod.Post, "/")) {
             assertEquals(
                 listOf("test-session=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; \$x-enc=URI_ENCODING"),
-                response.headers.values("Set-Cookie")
+                response.headers.values(setCookieHeaderName)
             )
         }
     }
@@ -64,59 +69,61 @@ internal class SessionCookieHandlerTest {
     internal fun getCookieSessionIdOrNull(): Unit = withTestApplication({
         test {
             val id = handler.getCookieSessionIdOrNull(call.request)
-            call.response.header("Session-Id", "id: ${id?.value}")
+            call.response.header(testSessionIdHeaderName, "id: ${id?.value}")
         }
     }) {
         with(handleRequest(HttpMethod.Post, "/") {
             addHeader(
-                "Cookie",
+                cookieHeaderName,
                 "test-session=10101010101010101010101010101010%2F683c4d98ebd16578e99d74140cb05fe1" +
                         "%3A66026618b373c60b5e67b420751c861834efd14f4f935a584c9dac9d885efca0"
             )
         }) {
-            assertEquals("id: 1001", response.headers["Session-Id"])
+            assertEquals("id: 1001", response.headers[testSessionIdHeaderName])
         }
+
+        val nullSessionId = "id: null"
 
         with(handleRequest(HttpMethod.Post, "/") {
             addHeader(
-                "Cookie",
+                cookieHeaderName,
                 "test-session=invalid-value"
             )
         }) {
-            assertEquals("id: null", response.headers["Session-Id"])
+            assertEquals(nullSessionId, response.headers[testSessionIdHeaderName])
         }
 
         with(handleRequest(HttpMethod.Post, "/") {
             addHeader(
-                "Cookie",
+                cookieHeaderName,
                 "test-session=invalid%2Fvalue"
             )
         }) {
-            assertEquals("id: null", response.headers["Session-Id"])
+            assertEquals(nullSessionId, response.headers[testSessionIdHeaderName])
         }
 
         with(handleRequest(HttpMethod.Post, "/") {
             addHeader(
-                "Cookie",
+                cookieHeaderName,
                 "test-session=10101010101010101010101010101010%2Finvalid%3Avalue"
             )
         }) {
-            assertEquals("id: null", response.headers["Session-Id"])
+            assertEquals(nullSessionId, response.headers[testSessionIdHeaderName])
         }
 
         with(handleRequest(HttpMethod.Post, "/") {
             addHeader(
-                "Cookie",
+                cookieHeaderName,
                 "test-session=10101010101010101010101010101010%2F683c4d98ebd16578e99d74140cb05fe1%3Avalue"
             )
         }) {
-            assertEquals("id: null", response.headers["Session-Id"])
+            assertEquals(nullSessionId, response.headers[testSessionIdHeaderName])
         }
 
         with(handleRequest(HttpMethod.Post, "/") {
             // No Session Cookie
         }) {
-            assertEquals("id: null", response.headers["Session-Id"])
+            assertEquals(nullSessionId, response.headers[testSessionIdHeaderName])
         }
     }
 
