@@ -4,8 +4,11 @@ buildscript {
     ext.kotlinx_coroutines_version = '0.23.4'
     ext.kotlinx_html_version = '0.6.11'
     ext.junit_version = '5.2.0'
+    ext.slf4j_version = '1.7.25'
     ext.okhttp_version = '3.11.0'
     ext.mockito_version = '2.19.1'
+    ext.mockk_version = '1.8.5'
+    ext.h2db_version = '1.4.197'
 
     repositories {
         mavenCentral()
