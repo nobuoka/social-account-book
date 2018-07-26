@@ -18,8 +18,10 @@ This application runs on Heroku.
 
 ### Environment variables
 
-| Name | Example |
-|---|---|
-| SBS_CONTEXT_URL | https://vcsbs.herokuapp.com/ |
-| SBS_TWITTER_CLIENT_IDENTIFIER | YOUR_TWITTER_APP_IDENTIFIER |
-| SBS_TWITTER_CLIENT_SECRET | YOUR_TWITTER_APP_SHARED_SECRET |
+| Name | Example |  |
+|---|---|---|
+| SBS_CONTEXT_URL | https://vcsbs.herokuapp.com/ | |
+| SBS_SESSION_ENCRYPTION_KEY | 012345679ABCDEF | Length must be 16 |
+| SBS_SESSION_SIGN_KEY | 012345678 | Length must be 8 |
+| SBS_TWITTER_CLIENT_IDENTIFIER | YOUR_TWITTER_APP_IDENTIFIER | |
+| SBS_TWITTER_CLIENT_SECRET | YOUR_TWITTER_APP_SHARED_SECRET | |

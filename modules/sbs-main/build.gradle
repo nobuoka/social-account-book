@@ -39,4 +39,6 @@ dependencies {
     testImplementation "io.mockk:mockk:$mockk_version"
 
     testImplementation "com.h2database:h2:$h2db_version"
+
+    testImplementation "io.ktor:ktor-server-test-host:$ktor_version"
 }

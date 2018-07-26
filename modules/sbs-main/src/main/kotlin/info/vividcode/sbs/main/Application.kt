@@ -7,7 +7,12 @@ import info.vividcode.ktor.twitter.login.*
 import info.vividcode.ktor.twitter.login.application.TemporaryCredentialNotFoundException
 import info.vividcode.ktor.twitter.login.application.TwitterCallFailedException
 import info.vividcode.oauth.OAuth
+import info.vividcode.sbs.main.auth.application.CreateNewSessionService
 import info.vividcode.sbs.main.auth.application.TemporaryCredentialStoreImpl
+import info.vividcode.sbs.main.core.application.CreateUserService
+import info.vividcode.sbs.main.core.application.FindUserService
+import info.vividcode.sbs.main.infrastructure.database.createTransactionManager
+import info.vividcode.sbs.main.infrastructure.web.SessionCookieHandler
 import info.vividcode.sbs.main.presentation.topHtml
 import info.vividcode.sbs.main.presentation.withHtmlDoctype
 import io.ktor.application.Application
@@ -31,11 +36,12 @@ import org.flywaydb.core.Flyway
 import java.time.Clock
 import java.util.*
 import kotlin.coroutines.experimental.CoroutineContext
-import info.vividcode.sbs.main.infrastructure.database.createTransactionManager
 
 fun Application.setup(env: Env? = null) {
     val appContextUrl = environment.config.property("sbs.contextUrl").getString()
     val appDatabaseJdbcUrl = "jdbc:h2:mem:sbs_dev;TRACE_LEVEL_FILE=4"
+    val appSessionEncryptionKey = environment.config.property("sbs.session.encryptionKey").getString().toByteArray()
+    val appSessionSignKey = environment.config.property("sbs.session.signKey").getString().toByteArray()
     val twitterClientCredentials = environment.config.config("sbs.twitter.clientCredential").let {
         ClientCredential(it.property("identifier").getString(), it.property("sharedSecret").getString())
     }
@@ -65,6 +71,10 @@ fun Application.setup(env: Env? = null) {
                     TemporaryCredentialStoreImpl(transactionManager)
             }
 
+    val findUerService = FindUserService.create(transactionManager)
+    val createUserService = CreateUserService.create(transactionManager)
+    val createNewSessionService = CreateNewSessionService(transactionManager, findUerService, createUserService)
+
     intercept(ApplicationCallPipeline.Call) {
         try {
             proceed()
@@ -73,6 +83,8 @@ fun Application.setup(env: Env? = null) {
             throw e
         }
     }
+
+    val sessionCookieHandler = SessionCookieHandler(appSessionEncryptionKey, appSessionSignKey)
 
     routing {
         staticBasePackage = "sbs.main"
@@ -88,7 +100,10 @@ fun Application.setup(env: Env? = null) {
             UrlPaths.TwitterLogin.start, UrlPaths.TwitterLogin.callback,
             appContextUrl, twitterClientCredentials, envNotNull,
             object : OutputPort {
-                override val success: OutputInterceptor<TwitterToken> = {
+                override val success: OutputInterceptor<TwitterToken> = { token ->
+                    val sessionId =
+                        createNewSessionService.createNewSessionByTwitterLogin(token.userId.toLong(), token.screenName)
+                    sessionCookieHandler.appendCookieSessionId(call.response, sessionId)
                     call.respondRedirect(UrlPaths.top, false)
                 }
                 override val twitterCallFailed: OutputInterceptor<TwitterCallFailedException> = {

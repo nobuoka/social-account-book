@@ -59,6 +59,8 @@ jobs:
             set +e
             docker run -it --rm -p 8080:8080 \
                 -e "SBS_CONTEXT_URL=http://localhost:8080" \
+                -e "SBS_SESSION_ENCRYPTION_KEY=0123456789ABCDEF" \
+                -e "SBS_SESSION_SIGN_KEY=01234567" \
                 -e "SBS_TWITTER_CLIENT_IDENTIFIER=TEST_IDENTIFIER" \
                 -e "SBS_TWITTER_CLIENT_SECRET=TEST_SHARED_SECRET" \
                 --name sbs-app-test sbs-app

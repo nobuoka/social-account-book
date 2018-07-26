@@ -14,6 +14,12 @@ ktor {
 
 sbs {
     contextUrl = "http://localhost:8080"
+
+    session {
+        encryptionKey = "0123456789ABCDEF" // Length must be 16.
+        signKey = "01234567" // Length must be 8.
+    }
+
     twitter {
         clientCredential {
             identifier = "YOUR_TWITTER_APP_IDENTIFIER"
