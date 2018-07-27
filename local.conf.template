@@ -14,6 +14,7 @@ ktor {
 
 sbs {
     contextUrl = "http://localhost:8080"
+    databaseJdbcUrl = "jdbc:h2:mem:sbs_dev;TRACE_LEVEL_FILE=4"
 
     session {
         encryptionKey = "0123456789ABCDEF" // Length must be 16.
