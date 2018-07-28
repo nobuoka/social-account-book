@@ -4,6 +4,7 @@ import info.vividcode.orm.AttributeName
 import info.vividcode.orm.TupleClassRegistry
 import info.vividcode.orm.where
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import java.sql.PreparedStatement
@@ -84,6 +85,140 @@ internal class RelationPredicateTest {
         Mockito.verifyNoMoreInteractions(preparedStatement)
     }
 
+    @Nested
+    internal inner class InCondition {
+        private val sqlConditionAlwaysFalse = "1 <> 1"
+
+        @Test
+        internal fun int_singleElement() {
+            val predicate = where { p(TestTuple.Content::test2) `in` listOf(100) }
+
+            val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
+            Assertions.assertEquals("\"test_2\" IN (?)", sqlWhereClause.whereClauseString)
+            Assertions.assertEquals(1, sqlWhereClause.valueSetterList.size)
+
+            val preparedStatement = Mockito.mock(PreparedStatement::class.java)
+            invokeValueSetterList(preparedStatement, sqlWhereClause.valueSetterList)
+            Mockito.verify(preparedStatement, Mockito.times(1)).setInt(1, 100)
+            Mockito.verifyNoMoreInteractions(preparedStatement)
+        }
+
+        @Test
+        internal fun int_multipleElements() {
+            val predicate = where { p(TestTuple.Content::test2) `in` listOf(100, 200, 300) }
+
+            val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
+            Assertions.assertEquals("\"test_2\" IN (?,?,?)", sqlWhereClause.whereClauseString)
+            Assertions.assertEquals(3, sqlWhereClause.valueSetterList.size)
+
+            val preparedStatement = Mockito.mock(PreparedStatement::class.java)
+            invokeValueSetterList(preparedStatement, sqlWhereClause.valueSetterList)
+            Mockito.verify(preparedStatement, Mockito.times(1)).setInt(1, 100)
+            Mockito.verify(preparedStatement, Mockito.times(1)).setInt(2, 200)
+            Mockito.verify(preparedStatement, Mockito.times(1)).setInt(3, 300)
+            Mockito.verifyNoMoreInteractions(preparedStatement)
+        }
+
+        @Test
+        internal fun int_empty() {
+            val predicate = where { p(TestTuple.Content::test2) `in` emptyList() }
+
+            val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
+            Assertions.assertEquals(sqlConditionAlwaysFalse, sqlWhereClause.whereClauseString)
+            Assertions.assertEquals(0, sqlWhereClause.valueSetterList.size)
+
+            val preparedStatement = Mockito.mock(PreparedStatement::class.java)
+            invokeValueSetterList(preparedStatement, sqlWhereClause.valueSetterList)
+            Mockito.verifyNoMoreInteractions(preparedStatement)
+        }
+
+        @Test
+        internal fun long_singleElement() {
+            val predicate = where { p(TestTuple::id) `in` listOf(100L) }
+
+            val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
+            Assertions.assertEquals("\"id\" IN (?)", sqlWhereClause.whereClauseString)
+            Assertions.assertEquals(1, sqlWhereClause.valueSetterList.size)
+
+            val preparedStatement = Mockito.mock(PreparedStatement::class.java)
+            invokeValueSetterList(preparedStatement, sqlWhereClause.valueSetterList)
+            Mockito.verify(preparedStatement, Mockito.times(1)).setLong(1, 100L)
+            Mockito.verifyNoMoreInteractions(preparedStatement)
+        }
+
+        @Test
+        internal fun long_multipleElements() {
+            val predicate = where { p(TestTuple::id) `in` listOf(100L, 200L, 300L) }
+
+            val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
+            Assertions.assertEquals("\"id\" IN (?,?,?)", sqlWhereClause.whereClauseString)
+            Assertions.assertEquals(3, sqlWhereClause.valueSetterList.size)
+
+            val preparedStatement = Mockito.mock(PreparedStatement::class.java)
+            invokeValueSetterList(preparedStatement, sqlWhereClause.valueSetterList)
+            Mockito.verify(preparedStatement, Mockito.times(1)).setLong(1, 100)
+            Mockito.verify(preparedStatement, Mockito.times(1)).setLong(2, 200)
+            Mockito.verify(preparedStatement, Mockito.times(1)).setLong(3, 300)
+            Mockito.verifyNoMoreInteractions(preparedStatement)
+        }
+
+        @Test
+        internal fun long_empty() {
+            val predicate = where { p(TestTuple::id) `in` emptyList() }
+
+            val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
+            Assertions.assertEquals(sqlConditionAlwaysFalse, sqlWhereClause.whereClauseString)
+            Assertions.assertEquals(0, sqlWhereClause.valueSetterList.size)
+
+            val preparedStatement = Mockito.mock(PreparedStatement::class.java)
+            invokeValueSetterList(preparedStatement, sqlWhereClause.valueSetterList)
+            Mockito.verifyNoMoreInteractions(preparedStatement)
+        }
+
+        @Test
+        internal fun string_singleElement() {
+            val predicate = where { p(TestTuple.Content::test1) `in` listOf("A") }
+
+            val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
+            Assertions.assertEquals("\"test1\" IN (?)", sqlWhereClause.whereClauseString)
+            Assertions.assertEquals(1, sqlWhereClause.valueSetterList.size)
+
+            val preparedStatement = Mockito.mock(PreparedStatement::class.java)
+            invokeValueSetterList(preparedStatement, sqlWhereClause.valueSetterList)
+            Mockito.verify(preparedStatement, Mockito.times(1)).setString(1, "A")
+            Mockito.verifyNoMoreInteractions(preparedStatement)
+        }
+
+        @Test
+        internal fun string_multipleElements() {
+            val predicate = where { p(TestTuple.Content::test1) `in` listOf("A", "B", "C") }
+
+            val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
+            Assertions.assertEquals("\"test1\" IN (?,?,?)", sqlWhereClause.whereClauseString)
+            Assertions.assertEquals(3, sqlWhereClause.valueSetterList.size)
+
+            val preparedStatement = Mockito.mock(PreparedStatement::class.java)
+            invokeValueSetterList(preparedStatement, sqlWhereClause.valueSetterList)
+            Mockito.verify(preparedStatement, Mockito.times(1)).setString(1, "A")
+            Mockito.verify(preparedStatement, Mockito.times(1)).setString(2, "B")
+            Mockito.verify(preparedStatement, Mockito.times(1)).setString(3, "C")
+            Mockito.verifyNoMoreInteractions(preparedStatement)
+        }
+
+        @Test
+        internal fun string_empty() {
+            val predicate = where { p(TestTuple.Content::test1) `in` emptyList() }
+
+            val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
+            Assertions.assertEquals(sqlConditionAlwaysFalse, sqlWhereClause.whereClauseString)
+            Assertions.assertEquals(0, sqlWhereClause.valueSetterList.size)
+
+            val preparedStatement = Mockito.mock(PreparedStatement::class.java)
+            invokeValueSetterList(preparedStatement, sqlWhereClause.valueSetterList)
+            Mockito.verifyNoMoreInteractions(preparedStatement)
+        }
+    }
+
     @Test
     fun isNull() {
         val predicate = where {
@@ -93,6 +228,12 @@ internal class RelationPredicateTest {
         val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
         Assertions.assertEquals("\"test1\" IS NULL", sqlWhereClause.whereClauseString)
         Assertions.assertEquals(0, sqlWhereClause.valueSetterList.size)
+    }
+
+    private fun invokeValueSetterList(
+        preparedStatement: PreparedStatement, valueSetterList: List<PreparedStatement.(Int) -> Unit>
+    ) {
+        valueSetterList.forEachIndexed { index, function -> function.invoke(preparedStatement, index + 1) }
     }
 
 }

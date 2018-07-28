@@ -12,6 +12,14 @@ fun <T : Any> RelationPredicate<T>.toSqlWhereClause(mappingInfoRegistry: TupleCl
             val columnName = mappingInfoRegistry.getTupleClass(this.type).findAttributeNameFromProperty(this.property)
             WhereClause("\"$columnName\" = ?", listOf(valueSetter(this@toSqlWhereClause.value)))
         }
+        is RelationPredicate.In<T, *> -> {
+            if (value.isEmpty()) {
+                WhereClause("1 <> 1", emptyList())
+            } else {
+                val columnName = mappingInfoRegistry.getTupleClass(type).findAttributeNameFromProperty(this.property)
+                WhereClause("\"$columnName\" IN (${value.joinToString(",") { "?" }})", value.map(::valueSetter))
+            }
+        }
         is RelationPredicate.IsNull<T, *> -> {
             val columnName = mappingInfoRegistry.getTupleClass(this.type).findAttributeNameFromProperty(this.property)
             WhereClause("\"$columnName\" IS NULL", emptyList())
