@@ -22,3 +22,13 @@ CREATE TABLE "twitter_temporary_credentials" (
   "identifier" VARCHAR(512) NOT NULL PRIMARY KEY,
   "shared_secret" VARCHAR(512) NOT NULL
 );
+
+CREATE TABLE "accounts" (
+  "id" BIGSERIAL NOT NULL PRIMARY KEY,
+  "label" VARCHAR(128) NOT NULL
+);
+
+CREATE TABLE "user_accounts" (
+  "user_id" BIGINT NOT NULL,
+  "account_id" BIGINT NOT NULL
+);

@@ -1,17 +1,9 @@
 package info.vividcode.sbs.main.core.application
 
-import info.vividcode.orm.OrmContextProvider
-import info.vividcode.orm.TransactionManager
 import info.vividcode.orm.where
 import info.vividcode.sbs.main.core.domain.User
-import info.vividcode.sbs.main.core.domain.infrastructure.CoreOrmContext
 import info.vividcode.sbs.main.core.domain.infrastructure.UserTuple
 import info.vividcode.sbs.main.core.domain.infrastructure.from
-
-private typealias TxManager = TransactionManager<OrmContextProvider<CoreOrmContext>>
-
-private suspend fun <R> TxManager.withOrmContext(execution: CoreOrmContext.() -> R) =
-    withTransaction { it.withOrmContext(execution) }
 
 internal interface CreateUserService {
 
@@ -21,7 +13,7 @@ internal interface CreateUserService {
     suspend fun createUser(displayName: String): User
 
     companion object {
-        internal fun create(txManager: TxManager): CreateUserService = object : CreateUserService {
+        internal fun create(txManager: CoreTxManager): CreateUserService = object : CreateUserService {
             override suspend fun createUser(displayName: String): User = run {
                 txManager.withOrmContext {
                     val content = UserTuple.Content(displayName)
@@ -42,7 +34,7 @@ internal interface FindUserService {
     suspend fun findUser(id: Long): User?
 
     companion object {
-        internal fun create(txManager: TxManager): FindUserService = object : FindUserService {
+        internal fun create(txManager: CoreTxManager): FindUserService = object : FindUserService {
             override suspend fun findUser(id: Long): User? = run {
                 txManager.withOrmContext {
                     users.select(where { UserTuple::id eq id }).toSet().firstOrNull()?.let(User.Companion::from)
