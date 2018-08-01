@@ -4,9 +4,7 @@ import info.vividcode.sbs.main.core.domain.User
 import kotlinx.html.*
 
 internal fun topHtml(
-    actor: User?,
-    twitterLoginPath: String,
-    logoutPath: String
+    m: TopHtmlPresentationModel
 ): suspend TagConsumer<*>.() -> Unit = {
     html {
         head {
@@ -17,22 +15,33 @@ internal fun topHtml(
         body {
             h1 { +"Social B/S" }
 
-            if (actor != null) {
-                div {
-                    span { +"User : ${actor.displayName}" }
-                }
-                form(method = FormMethod.post, action = logoutPath) {
-                    submitInput {
-                        value = "Sign out"
+            when (m) {
+                is TopHtmlPresentationModel.LoginUser -> {
+                    div {
+                        a(href = m.userPrivateHomePath) { +"User : ${m.actor.displayName}" }
+                    }
+                    form(method = FormMethod.post, action = m.logoutPath) {
+                        submitInput {
+                            value = "Sign out"
+                        }
                     }
                 }
-            } else {
-                form(method = FormMethod.post, action = twitterLoginPath) {
-                    submitInput {
-                        value = "Sign in with Twitter"
+                is TopHtmlPresentationModel.AnonymousUser -> {
+                    form(method = FormMethod.post, action = m.twitterLoginPath) {
+                        submitInput {
+                            value = "Sign in with Twitter"
+                        }
                     }
                 }
-            }
+            } as? Any?
         }
     }
+}
+
+internal sealed class TopHtmlPresentationModel {
+    class LoginUser(val actor: User, val logoutPath: String, val userPrivateHomePath: String) :
+        TopHtmlPresentationModel()
+
+    class AnonymousUser(val twitterLoginPath: String) :
+        TopHtmlPresentationModel()
 }

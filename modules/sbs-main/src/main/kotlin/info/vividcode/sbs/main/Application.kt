@@ -11,23 +11,32 @@ import info.vividcode.sbs.main.auth.application.CreateNewSessionService
 import info.vividcode.sbs.main.auth.application.DeleteSessionService
 import info.vividcode.sbs.main.auth.application.RetrieveActorUserService
 import info.vividcode.sbs.main.auth.application.TemporaryCredentialStoreImpl
+import info.vividcode.sbs.main.core.application.CreateUserAccountService
 import info.vividcode.sbs.main.core.application.CreateUserService
+import info.vividcode.sbs.main.core.application.FindUserAccountsService
 import info.vividcode.sbs.main.core.application.FindUserService
 import info.vividcode.sbs.main.core.domain.User
 import info.vividcode.sbs.main.infrastructure.database.createTransactionManager
+import info.vividcode.sbs.main.infrastructure.web.SessionCookieEncrypt
 import info.vividcode.sbs.main.infrastructure.web.SessionCookieHandler
+import info.vividcode.sbs.main.presentation.TopHtmlPresentationModel
 import info.vividcode.sbs.main.presentation.topHtml
+import info.vividcode.sbs.main.presentation.up.userPrivateHomeHtml
 import info.vividcode.sbs.main.presentation.withHtmlDoctype
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCallPipeline
 import io.ktor.application.call
+import io.ktor.application.log
 import io.ktor.content.resources
 import io.ktor.content.static
 import io.ktor.content.staticBasePackage
 import io.ktor.http.ContentType.Text.Html
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.OK
+import io.ktor.http.Parameters
 import io.ktor.request.ApplicationRequest
+import io.ktor.request.ContentTransformationException
+import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.response.respondRedirect
 import io.ktor.response.respondWrite
@@ -82,6 +91,9 @@ fun Application.setup(env: Env? = null) {
     val createNewSessionService = CreateNewSessionService(transactionManager, findUerService, createUserService)
     val deleteSessionService = DeleteSessionService(transactionManager)
 
+    val findUserAccountsService = FindUserAccountsService(transactionManager)
+    val createUserAccountService = CreateUserAccountService(transactionManager)
+
     intercept(ApplicationCallPipeline.Call) {
         try {
             proceed()
@@ -91,7 +103,8 @@ fun Application.setup(env: Env? = null) {
         }
     }
 
-    val sessionCookieHandler = SessionCookieHandler(appSessionEncryptionKey, appSessionSignKey)
+    val sessionCookieHandler =
+        SessionCookieHandler(SessionCookieEncrypt(appSessionEncryptionKey, appSessionSignKey).createCodec())
 
     suspend fun ApplicationRequest.getActorUserOrNull(): User? =
         sessionCookieHandler.getCookieSessionIdOrNull(call.request)?.let { sessionId ->
@@ -106,7 +119,13 @@ fun Application.setup(env: Env? = null) {
 
         get(UrlPaths.top) {
             val actorUserOrNull = call.request.getActorUserOrNull()
-            val htmlOutput = withHtmlDoctype(topHtml(actorUserOrNull, UrlPaths.TwitterLogin.start, UrlPaths.logout))
+            val m = if (actorUserOrNull != null) {
+                val userPrivateHomePath = actorUserOrNull.let { UrlPaths.UserPrivate.Home.concrete(it) }
+                TopHtmlPresentationModel.LoginUser(actorUserOrNull, UrlPaths.logout, userPrivateHomePath)
+            } else {
+                TopHtmlPresentationModel.AnonymousUser(UrlPaths.TwitterLogin.start)
+            }
+            val htmlOutput = withHtmlDoctype(topHtml(m))
             call.respondWrite(Html, OK, htmlOutput)
         }
 
@@ -116,6 +135,42 @@ fun Application.setup(env: Env? = null) {
             }
             sessionCookieHandler.clearCookieSessionId(call.response)
             call.respondRedirect(UrlPaths.top, false)
+        }
+
+        get(UrlPaths.UserPrivate.Home.parameterized) {
+            val actorUser = call.request.getActorUserOrNull() ?: return@get
+            val targetUserId = UrlPaths.UserPrivate.Home.getUserId(call)?.toLongOrNull()
+
+            if (actorUser.id != targetUserId) {
+                // Not found.
+            } else {
+                val userAccounts = findUserAccountsService.findUserAccounts(actorUser)
+                val userAccountsPath = actorUser.let { UrlPaths.UserPrivate.Accounts.concrete(it) }
+                val htmlOutput =
+                    withHtmlDoctype(userPrivateHomeHtml(actorUser, userAccounts, UrlPaths.logout, userAccountsPath))
+                call.respondWrite(Html, OK, htmlOutput)
+            }
+        }
+
+        post(UrlPaths.UserPrivate.Accounts.parameterized) {
+            val actorUser = call.request.getActorUserOrNull() ?: return@post
+            val targetUserId = UrlPaths.UserPrivate.Accounts.getUserId(call)?.toLongOrNull()
+
+            val requestBody = try {
+                call.receive<Parameters>()
+            } catch (e: ContentTransformationException) {
+                log.warn("Request body cannot be received.", e)
+                Parameters.Empty
+            }
+            val label = requestBody["label"] ?: return@post
+
+            if (actorUser.id != targetUserId) {
+                // Not found.
+            } else {
+                createUserAccountService.createUserAccount(actorUser, label)
+                val userPrivateHomePath = actorUser.let { UrlPaths.UserPrivate.Home.concrete(it) }
+                call.respondRedirect(userPrivateHomePath, false)
+            }
         }
 
         setupTwitterLogin(

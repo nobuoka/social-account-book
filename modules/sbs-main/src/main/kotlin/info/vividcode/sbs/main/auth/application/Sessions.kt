@@ -5,6 +5,7 @@ import info.vividcode.orm.TransactionManager
 import info.vividcode.orm.where
 import info.vividcode.sbs.main.ApplicationInternalException
 import info.vividcode.sbs.main.auth.domain.SessionId
+import info.vividcode.sbs.main.auth.domain.createSession
 import info.vividcode.sbs.main.auth.domain.createTwitterUserConnection
 import info.vividcode.sbs.main.auth.domain.getUserIdConnectedToTwitterAccount
 import info.vividcode.sbs.main.auth.domain.infrastructure.AuthOrmContext
@@ -52,7 +53,7 @@ internal class CreateNewSessionService(
 
             transactionManager.withOrmContext {
                 createTwitterUserConnection(user, twitterUserId, twitterScreenName)
-                SessionId(loginSessions.insert(LoginSessionTuple.Content(user.id)))
+                createSession(user)
             }
         }
 }

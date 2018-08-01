@@ -2,6 +2,7 @@ package info.vividcode.sbs.main.core.application
 
 import info.vividcode.orm.where
 import info.vividcode.sbs.main.core.domain.User
+import info.vividcode.sbs.main.core.domain.createUser
 import info.vividcode.sbs.main.core.domain.infrastructure.UserTuple
 import info.vividcode.sbs.main.core.domain.infrastructure.from
 
@@ -14,13 +15,8 @@ internal interface CreateUserService {
 
     companion object {
         internal fun create(txManager: CoreTxManager): CreateUserService = object : CreateUserService {
-            override suspend fun createUser(displayName: String): User = run {
-                txManager.withOrmContext {
-                    val content = UserTuple.Content(displayName)
-                    val id = users.insert(content)
-                    User.from(UserTuple(id, content))
-                }
-            }
+            override suspend fun createUser(displayName: String): User =
+                txManager.withOrmContext { createUser(displayName) }
         }
     }
 
