@@ -12,7 +12,8 @@ internal class TopHtmlTest {
     @Test
     internal fun withoutActor(): Unit = runBlocking {
         val written = CharArrayWriter().use { writer ->
-            withHtmlDoctype(topHtml(null, "/login", "/logout")).invoke(writer)
+            val m = TopHtmlPresentationModel.AnonymousUser("/login")
+            withHtmlDoctype(topHtml(m)).invoke(writer)
             writer.toString()
         }
 
@@ -25,7 +26,8 @@ internal class TopHtmlTest {
     @Test
     internal fun withActor(): Unit = runBlocking {
         val written = CharArrayWriter().use { writer ->
-            withHtmlDoctype(topHtml(User(1001, "test-user"), "/login", "/logout")).invoke(writer)
+            val m = TopHtmlPresentationModel.LoginUser(User(1001, "test-user"), "/logout", "/home")
+            withHtmlDoctype(topHtml(m)).invoke(writer)
             writer.toString()
         }
 
