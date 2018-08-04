@@ -39,6 +39,7 @@ internal class ApplicationTest {
     private fun withSbsTestApplication(test: TestApplicationEngine.() -> Unit): Unit = withTestApplication({
         (environment.config as MapApplicationConfig).apply {
             put("sbs.contextUrl", "http://test.example.com")
+            //put("sbs.databaseJdbcUrl", testDbJdbcUrl)
             put("sbs.session.encryptionKey", sessionCookieEncryptionKey)
             put("sbs.session.signKey", sessionCookieSignKey)
             put("sbs.twitter.clientCredential.identifier", "test-twitter-client-identifier")

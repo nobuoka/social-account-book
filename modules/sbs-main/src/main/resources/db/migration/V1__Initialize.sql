@@ -32,3 +32,9 @@ CREATE TABLE "user_accounts" (
   "user_id" BIGINT NOT NULL,
   "account_id" BIGINT NOT NULL
 );
+
+CREATE TABLE "account_amount" (
+  "account_id" BIGINT NOT NULL,
+  "date" DATETIME NOT NULL,
+  "value" INTEGER NOT NULL
+);

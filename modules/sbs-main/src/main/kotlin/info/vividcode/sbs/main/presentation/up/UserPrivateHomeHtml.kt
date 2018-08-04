@@ -9,7 +9,7 @@ internal fun userPrivateHomeHtml(
     userAccounts: List<Account>,
     logoutPath: String,
     userAccountsPath: String
-): suspend TagConsumer<*>.() -> Unit = {
+): TagConsumer<*>.() -> Unit = {
     html {
         head {
             meta(name = "viewport", content = "width=device-width,initial-scale=1")
