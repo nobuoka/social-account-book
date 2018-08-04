@@ -1,10 +1,8 @@
 package info.vividcode.sbs.main.core.domain
 
 import info.vividcode.orm.where
-import info.vividcode.sbs.main.core.domain.infrastructure.AccountTuple
-import info.vividcode.sbs.main.core.domain.infrastructure.CoreOrmContext
-import info.vividcode.sbs.main.core.domain.infrastructure.UserAccountTuple
-import info.vividcode.sbs.main.core.domain.infrastructure.from
+import info.vividcode.sbs.main.core.domain.infrastructure.*
+import java.time.LocalDate
 
 internal data class User(
     val id: Long,
@@ -18,6 +16,12 @@ internal data class Account(
     val label: String
 ) {
     companion object
+}
+
+internal fun CoreOrmContext.createUser(displayName: String): User {
+    val content = UserTuple.Content(displayName)
+    val id = users.insert(content)
+    return User.from(UserTuple(id, content))
 }
 
 internal fun CoreOrmContext.createUserAccount(targetUser: User, accountLabel: String): Account {

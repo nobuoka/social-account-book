@@ -7,7 +7,13 @@
   </head>
   <body>
     <h1>Social B/S</h1>
-    <div><a href="/home">User : test-user</a></div>
+    <div><span>Hi, test-user!</span></div>
     <form action="/logout" method="post"><input type="submit" value="Sign out"></form>
+    <div>
+      <h2>Your accounts</h2>
+      <h3>Add account</h3>
+      <form action="/accounts" method="post"><input type="text" name="label"><input type="submit" value="Create account"></form>
+      <h3>Current accounts</h3>
+<span>Not added yet.</span></div>
   </body>
 </html>

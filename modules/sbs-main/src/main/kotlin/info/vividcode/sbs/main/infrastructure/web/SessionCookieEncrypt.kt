@@ -1,5 +1,6 @@
 package info.vividcode.sbs.main.infrastructure.web
 
+import info.vividcode.sbs.main.auth.domain.SessionId
 import io.ktor.sessions.SessionTransportTransformerEncrypt
 import io.ktor.util.hex
 import org.slf4j.LoggerFactory
@@ -74,6 +75,8 @@ constructor(
         return "${hex(iv)}/${hex(encrypted)}:${hex(mac)}"
     }
 
+    internal fun createCodec(): CookieCodec<SessionId> = Codec(this)
+
     private fun encrypt(initVector: ByteArray, decrypted: ByteArray): ByteArray =
         encryptDecrypt(Cipher.ENCRYPT_MODE, initVector, decrypted)
 
@@ -116,6 +119,12 @@ constructor(
     } catch (e: NumberFormatException) {
         log.debug("Parsing hexadecimal string failed", e)
         null
+    }
+
+    private class Codec(private val encrypt: SessionCookieEncrypt) : CookieCodec<SessionId> {
+        override fun encode(value: SessionId): String = encrypt.transformWrite("${value.value}")
+        override fun decode(cookieValue: String): SessionId? =
+            encrypt.transformRead(cookieValue)?.toLongOrNull()?.let(::SessionId)
     }
 
 }

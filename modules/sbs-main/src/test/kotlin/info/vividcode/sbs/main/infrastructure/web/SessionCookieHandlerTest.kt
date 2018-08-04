@@ -23,10 +23,12 @@ internal class SessionCookieHandlerTest {
     }
 
     private val handler = SessionCookieHandler(
-        "0123456789ABCDEF".toByteArray(),
-        "01234567".toByteArray(),
+        SessionCookieEncrypt(
+            "0123456789ABCDEF".toByteArray(),
+            "01234567".toByteArray()
+        ) { ByteArray(it) { 0x10 } }.createCodec(),
         testSessionCookieName
-    ) { ByteArray(it) { 0x10 } }
+    )
 
     private val testSessionCookie =
         "test-session=10101010101010101010101010101010%2F683c4d98ebd16578e99d74140cb05fe1" +
