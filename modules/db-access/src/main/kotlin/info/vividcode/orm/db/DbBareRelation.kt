@@ -21,8 +21,8 @@ interface DbBareRelation<T : Any> : BareRelation<T> {
             SqlResultInfo(tupleType, tupleClassRegistry)
         )
 
-    companion object {
-        fun <R : BareRelation<*>> create(
+    companion object : BareRelationFactory<DbBareRelation<*>> {
+        override fun <R : BareRelation<*>> create(
             relationName: String, relationClass: KClass<R>, tupleType: KClass<*>, tupleClassRegistry: TupleClassRegistry
         ): DbBareRelation<*> =
             Proxy.newProxyInstance(

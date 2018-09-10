@@ -1,7 +1,7 @@
 package info.vividcode.orm.db
 
 import info.vividcode.orm.*
-import org.h2.jdbcx.JdbcDataSource
+import info.vividcode.orm.onmemory.OnMemoryBareRelation
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.sql.Connection
 import java.sql.DriverManager
+import kotlin.reflect.KClass
 
 internal class JdbcOrmContextsTest {
 
@@ -82,12 +83,18 @@ internal class JdbcOrmContextsTest {
         val connectionTestExtension = TestDbConnectionExtension()
     }
 
-    @Nested
-    inner class PropertyTest {
+    interface WithOrmContextFunction {
+        operator fun <T> invoke(runnable: OrmContext.() -> T): T
+    }
+
+    abstract class PropertySpec<T : BareRelation<*>>(
+            private val withOrmContext: WithOrmContextFunction,
+            private val expectedBareRelationClass: KClass<T>
+    ) {
         @Test
         fun property() {
             withOrmContext {
-                Assertions.assertTrue(myRelation is DbBareRelation<*>)
+                Assertions.assertTrue(expectedBareRelationClass.isInstance(myRelation))
             }
         }
 
@@ -99,12 +106,15 @@ internal class JdbcOrmContextsTest {
                 }
 
                 Assertions.assertEquals(
-                    "The return type of method `getUnknownType` cannot be able to handle (type : String).",
-                    exception.message
+                        "The return type of method `getUnknownType` cannot be able to handle (type : String).",
+                        exception.message
                 )
             }
         }
     }
+
+    @Nested
+    inner class PropertyTest : PropertySpec<DbBareRelation<*>>(withOrmContextFunction, DbBareRelation::class)
 
     @Nested
     inner class OrmQueryContextMethodsTest {
@@ -399,6 +409,13 @@ internal class JdbcOrmContextsTest {
     private fun <T> withOrmContext(runnable: OrmContext.() -> T): T {
         val ormContext = JdbcOrmContexts.create(OrmContext::class, connectionTestExtension.connection)
         return with(ormContext, runnable)
+    }
+
+    private val withOrmContextFunction = object : WithOrmContextFunction {
+        override operator fun <T> invoke(runnable: OrmContext.() -> T): T {
+            val ormContext = JdbcOrmContexts.create(OrmContext::class, connectionTestExtension.connection)
+            return with(ormContext, runnable)
+        }
     }
 
     class TestDbConnectionExtension : BeforeEachCallback, AfterEachCallback {
