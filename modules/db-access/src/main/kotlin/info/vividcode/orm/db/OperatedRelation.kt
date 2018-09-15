@@ -4,6 +4,7 @@ import info.vividcode.orm.Relation
 import info.vividcode.orm.RelationPredicate
 import info.vividcode.orm.SimpleRestrictedRelation
 import info.vividcode.orm.TupleClassRegistry
+import info.vividcode.orm.common.OperatedRelationImplementation
 import java.sql.Connection
 import java.sql.PreparedStatement
 import kotlin.reflect.KClass
@@ -11,7 +12,7 @@ import kotlin.reflect.KClass
 open class OperatedRelation<T : Any>(
     val sqlCommand: SqlCommand,
     val sqlResultInfo: SqlResultInfo<T>
-) : Relation<T> {
+) : OperatedRelationImplementation<Connection, T> {
 
     class SimpleRestricted<T : Any> internal constructor(
         sqlCommand: SqlCommand,
@@ -27,12 +28,12 @@ open class OperatedRelation<T : Any>(
             sqlResultInfo.tupleClassRegistry
         )
 
-    fun forUpdate() = OperatedRelation(
+    override fun forUpdate() = OperatedRelation(
         SqlCommand("${sqlCommand.sqlString} FOR UPDATE", sqlCommand.sqlValueSetterList),
         sqlResultInfo
     )
 
-    fun toSet(connection: Connection): Set<T> =
+    override fun toSet(connection: Connection): Set<T> =
         executeQuery(connection, sqlCommand).let { retrieveResult(it, sqlResultInfo) }
 
     companion object {
