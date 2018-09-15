@@ -5,7 +5,7 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import kotlin.reflect.KType
-import kotlin.reflect.full.*
+import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
 
 fun executeQuery(
