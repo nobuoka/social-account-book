@@ -11,7 +11,6 @@ import kotlinx.coroutines.experimental.CoroutineDispatcher
 import java.lang.reflect.Proxy
 import java.sql.Connection
 import kotlin.reflect.KClass
-import kotlin.reflect.KType
 import kotlin.reflect.full.cast
 
 object JdbcOrmContexts {
@@ -41,24 +40,21 @@ object JdbcOrmContexts {
                 relationName: String,
                 insertedValue: Any,
                 tupleClassRegistry: TupleClassRegistry,
-                returnType: KType,
                 returnGeneratedKeys: Boolean
-        ) = insert(connection, relationName, insertedValue, tupleClassRegistry, returnType, returnGeneratedKeys)
+        ) = insert(connection, relationName, insertedValue, tupleClassRegistry, returnGeneratedKeys)
 
         override fun update(
                 relationName: String,
                 updateValue: Any,
                 predicate: RelationPredicate<*>,
-                tupleClassRegistry: TupleClassRegistry,
-                returnType: KType
-        ) = update(connection, relationName, updateValue, predicate, tupleClassRegistry, returnType)
+                tupleClassRegistry: TupleClassRegistry
+        ) = update(connection, relationName, updateValue, predicate, tupleClassRegistry)
 
         override fun delete(
                 relationName: String,
                 predicate: RelationPredicate<*>,
-                tupleClassRegistry: TupleClassRegistry,
-                returnType: KType
-        ) = delete(connection, relationName, predicate, tupleClassRegistry, returnType)
+                tupleClassRegistry: TupleClassRegistry
+        ) = delete(connection, relationName, predicate, tupleClassRegistry)
     }
 
 }
