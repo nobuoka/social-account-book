@@ -9,6 +9,7 @@ buildscript {
     ext.mockito_version = '2.19.1'
     ext.mockk_version = '1.8.5'
     ext.h2db_version = '1.4.197'
+    ext.jacoco_version = "0.8.2"
 
     repositories {
         mavenCentral()
@@ -31,6 +32,10 @@ repositories {
 }
 
 apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = jacoco_version
+}
 
 task jacocoMerge(type: JacocoMerge) {
     gradle.afterProject { p, state ->

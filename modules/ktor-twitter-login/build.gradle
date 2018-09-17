@@ -18,6 +18,10 @@ test {
     useJUnitPlatform()
 }
 
+jacoco {
+    toolVersion = jacoco_version
+}
+
 dependencies {
     implementation project(':modules:whatwg-url')
 

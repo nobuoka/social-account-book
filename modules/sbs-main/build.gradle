@@ -17,6 +17,10 @@ test {
     useJUnitPlatform()
 }
 
+jacoco {
+    toolVersion = jacoco_version
+}
+
 dependencies {
     implementation project(':modules:ktor-twitter-login')
     implementation project(':modules:db-access')
