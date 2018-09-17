@@ -1,12 +1,13 @@
 package info.vividcode.orm.db
 
-import info.vividcode.orm.*
+import info.vividcode.orm.RelationPredicate
+import info.vividcode.orm.TupleClass
+import info.vividcode.orm.TupleClassMember
+import info.vividcode.orm.TupleClassRegistry
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import kotlin.reflect.KType
 import kotlin.reflect.full.primaryConstructor
-import kotlin.reflect.jvm.jvmErasure
 
 fun executeQuery(
     connection: Connection,
@@ -90,12 +91,11 @@ private fun createSqlValueSetter(value: Any?): PreparedStatement.(Int) -> Unit =
 }
 
 fun insert(
-    connection: Connection,
-    relationName: String,
-    insertedValue: Any,
-    tupleClassRegistry: TupleClassRegistry,
-    returnType: KType,
-    returnGeneratedKeys: Boolean
+        connection: Connection,
+        relationName: String,
+        insertedValue: Any,
+        tupleClassRegistry: TupleClassRegistry,
+        returnGeneratedKeys: Boolean
 ): Any {
     val insertCommand = createInsertSqlCommand(relationName, insertedValue, tupleClassRegistry)
 
@@ -108,38 +108,22 @@ fun insert(
     s.executeUpdate()
 
     return if (returnGeneratedKeys) {
-        val id = s.generatedKeys.let {
+        listOf(s.generatedKeys.let {
             it.next()
             it.getLong(1)
-        }
-        when (returnType.jvmErasure) {
-            Long::class -> id
-            else ->
-                throw RuntimeException(
-                    "`${Insert::returnGeneratedKeys.name}` method must return `${Long::class.simpleName}`."
-                )
-        }
+        })
     } else {
-        when (returnType.jvmErasure) {
-            Int::class -> s.updateCount
-            Unit::class -> Unit
-            else ->
-                throw RuntimeException(
-                    "Non `${Insert::returnGeneratedKeys.name}` method must " +
-                            "return `${Int::class.simpleName}` or `${Unit::class.simpleName}`."
-                )
-        }
+        s.updateCount
     }
 }
 
 fun update(
-    connection: Connection,
-    relationName: String,
-    updateValue: Any,
-    predicate: RelationPredicate<*>,
-    tupleClassRegistry: TupleClassRegistry,
-    returnType: KType
-): Any {
+        connection: Connection,
+        relationName: String,
+        updateValue: Any,
+        predicate: RelationPredicate<*>,
+        tupleClassRegistry: TupleClassRegistry
+): Int {
     val updateCommand = createUpdateSqlCommand(relationName, updateValue, predicate, tupleClassRegistry)
 
     val s = connection.prepareStatement(updateCommand.sqlString)
@@ -147,24 +131,15 @@ fun update(
 
     s.executeUpdate()
 
-    return when (returnType.jvmErasure) {
-        Int::class -> s.updateCount
-        Unit::class -> Unit
-        else ->
-            throw RuntimeException(
-                "`${Update::class.simpleName}` annotated method must " +
-                        "return `${Int::class.simpleName}` or `${Unit::class.simpleName}`."
-            )
-    }
+    return s.updateCount
 }
 
 fun delete(
-    connection: Connection,
-    relationName: String,
-    predicate: RelationPredicate<*>,
-    tupleClassRegistry: TupleClassRegistry,
-    returnType: KType
-): Any {
+        connection: Connection,
+        relationName: String,
+        predicate: RelationPredicate<*>,
+        tupleClassRegistry: TupleClassRegistry
+): Int {
     val deleteCommand = createDeleteSqlCommand(relationName, predicate, tupleClassRegistry)
 
     val s = connection.prepareStatement(deleteCommand.sqlString)
@@ -172,15 +147,7 @@ fun delete(
 
     s.executeUpdate()
 
-    return when (returnType.jvmErasure) {
-        Int::class -> s.updateCount
-        Unit::class -> Unit
-        else ->
-            throw RuntimeException(
-                "`${Delete::class.simpleName}` annotated method must " +
-                        "return `${Int::class.simpleName}` or `${Unit::class.simpleName}`."
-            )
-    }
+    return s.updateCount
 }
 
 fun <T : Any> mapTuple(aClass: TupleClass<T>, columnValueMapper: ColumnValueMapper, resultSet: ResultSet): T {
