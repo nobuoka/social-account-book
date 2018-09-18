@@ -43,7 +43,9 @@ internal abstract class BareRelationRegistrySpec<T : Any>(
             val relation = act(TestRelation::class)
 
             Assertions.assertTrue(relation is TestRelation)
-            if (relation !is DbBareRelation<*>) throw AssertionError("$relation is not ${DbBareRelation::class.simpleName}")
+            if (relation !is BareRelationImplementation<*, *>) {
+                throw AssertionError("$relation is not ${BareRelationImplementation::class.simpleName}")
+            }
 
             Assertions.assertEquals("foo", relation.relationName)
             Assertions.assertEquals(TestTuple::class, relation.tupleType)

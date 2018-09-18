@@ -14,13 +14,13 @@ fun <T : Any, R : Any> whereOf(
 
 sealed class RelationPredicate<T : Any> {
 
-    class Eq<T : Any, R : Any>(val type: KClass<T>, val property: KProperty1<T, R>, val value: R) :
+    class Eq<T : Any, R : Any>(val type: KClass<T>, val property: KProperty1<T, R?>, val value: R) :
         RelationPredicate<T>()
 
     /**
      * This class represents SQL `in` condition.
      */
-    class In<T : Any, R : Any>(val type: KClass<T>, val property: KProperty1<T, R>, val value: List<R>) :
+    class In<T : Any, R : Any>(val type: KClass<T>, val property: KProperty1<T, R?>, val value: List<R>) :
         RelationPredicate<T>()
 
     class IsNull<T : Any, R>(val type: KClass<T>, val property: KProperty1<T, R>) :
@@ -36,17 +36,17 @@ object RelationPredicateBuilder {
     /**
      * Create [Prop] for [property]. Created value can be used for [in] method.
      */
-    inline fun <reified T : Any, R> p(property: KProperty1<T, R>) = Prop(T::class, property)
+    inline fun <reified T : Any, R : Any> p(property: KProperty1<T, R?>) = Prop(T::class, property)
 
-    inline infix fun <reified T : Any> KProperty1<T, Long>.eq(d: Long): RelationPredicate<T> {
+    inline infix fun <reified T : Any> KProperty1<T, Long?>.eq(d: Long): RelationPredicate<T> {
         return RelationPredicate.Eq(T::class, this, d)
     }
 
-    inline infix fun <reified T : Any> KProperty1<T, Int>.eq(d: Int): RelationPredicate<T> {
+    inline infix fun <reified T : Any> KProperty1<T, Int?>.eq(d: Int): RelationPredicate<T> {
         return RelationPredicate.Eq(T::class, this, d)
     }
 
-    inline infix fun <reified T : Any> KProperty1<T, String>.eq(d: String): RelationPredicate<T> {
+    inline infix fun <reified T : Any> KProperty1<T, String?>.eq(d: String): RelationPredicate<T> {
         return RelationPredicate.Eq(T::class, this, d)
     }
 
@@ -55,7 +55,7 @@ object RelationPredicateBuilder {
      *
      * @param v List of target values. If this is empty list, this condition will be always false.
      */
-    infix fun <T : Any, E : Any> Prop<T, E>.`in`(v: List<E>): RelationPredicate<T> =
+    infix fun <T : Any, E : Any> Prop<T, E?>.`in`(v: List<E>): RelationPredicate<T> =
         RelationPredicate.In(this.receiverClass, this.property, v)
 
     fun <T : Any, R : Any> of(
@@ -64,7 +64,7 @@ object RelationPredicateBuilder {
     ): RelationPredicate<T> =
         RelationPredicate.Converter(c, builder(RelationPredicateBuilder))
 
-    inline val <reified T : Any> KProperty1<T, Any>.isNull: RelationPredicate<T>
+    inline val <reified T : Any> KProperty1<T, Any?>.isNull: RelationPredicate<T>
         get() {
             return RelationPredicate.IsNull(T::class, this)
         }
