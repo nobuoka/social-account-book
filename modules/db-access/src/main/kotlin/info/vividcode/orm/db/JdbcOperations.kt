@@ -7,7 +7,6 @@ import info.vividcode.orm.TupleClassRegistry
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import kotlin.reflect.full.primaryConstructor
 
 fun executeQuery(
     connection: Connection,
@@ -150,21 +149,10 @@ fun delete(
     return s.updateCount
 }
 
-fun <T : Any> mapTuple(aClass: TupleClass<T>, columnValueMapper: ColumnValueMapper, resultSet: ResultSet): T {
-    val args = aClass.members.map {
-        when (it) {
-            is TupleClassMember.CounterpartToSingleAttribute -> columnValueMapper.mapColumnValue(
-                resultSet, resultSet.findColumn(it.attributeName), it.property.returnType
-            )
-            is TupleClassMember.CounterpartToMultipleAttributes<T, *> -> mapTuple(
-                it.subAttributeValues,
-                columnValueMapper,
-                resultSet
-            )
+fun <T : Any> mapTuple(aClass: TupleClass<T>, columnValueMapper: ColumnValueMapper, resultSet: ResultSet): T =
+        aClass.createTuple { attributeName, returnType ->
+            columnValueMapper.mapColumnValue(resultSet, resultSet.findColumn(attributeName), returnType)
         }
-    }
-    return aClass.type.primaryConstructor?.call(*args.toTypedArray())!!
-}
 
 private fun <T : Any> TupleClass<T>.createSqlColumnNameAndValuePairs(targetValue: T): List<Pair<Any, Any?>> {
     return this.members.flatMap {

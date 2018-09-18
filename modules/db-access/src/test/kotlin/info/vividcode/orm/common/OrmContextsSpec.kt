@@ -142,6 +142,20 @@ internal abstract class OrmContextsSpec<T : BareRelation<*>>(
         }
     }
 
+    @Nested
+    internal inner class SelectFromOperatedRelationTest {
+        @Test
+        fun test() {
+            val relations = withOrmContext {
+                myRelation.select(whereOf(MyTuple::id) { p(MyTuple.Id::value) `in` listOf(10L, 20L) })
+                        .select(whereOf(MyTuple::content) { MyTuple.Content::value eq "Good bye!" })
+                        .toSet()
+            }
+
+            Assertions.assertEquals(setOf(MyTuple(MyTuple.Id(20), MyTuple.Content("Good bye!"))), relations)
+        }
+    }
+
     @Test
     fun unknownBareRelationInstance() {
         val exception = Assertions.assertThrows(RuntimeException::class.java) {
