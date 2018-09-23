@@ -9,4 +9,5 @@ fun <T : Any> RelationPredicate<T>.check(entity: T): Boolean = when (this) {
     is RelationPredicate.In<T, *> -> this.value.contains(this.property.get(entity))
     is RelationPredicate.IsNull<T, *> -> this.property.get(entity) == null
     is RelationPredicate.Converter<T, *> -> this.internalCheck(entity)
+    is RelationPredicate.And -> this.expressions.all { it.check(entity) }
 }

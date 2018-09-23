@@ -29,6 +29,11 @@ sealed class RelationPredicate<T : Any> {
     class Converter<T : Any, R : Any>(val converter: (T) -> R, val condition: RelationPredicate<R>) :
         RelationPredicate<T>()
 
+    /**
+     * This class represents SQL expression which is composed of multiple expressions joined by logical operator `and`.
+     */
+    class And<T : Any>(val expressions: List<RelationPredicate<T>>) : RelationPredicate<T>()
+
 }
 
 object RelationPredicateBuilder {
@@ -68,6 +73,18 @@ object RelationPredicateBuilder {
         get() {
             return RelationPredicate.IsNull(T::class, this)
         }
+
+    /**
+     * Join two expressions by `and` operator.
+     */
+    infix fun <T : Any> RelationPredicate<T>.and(predicate: RelationPredicate<T>): RelationPredicate<T> = run {
+        val expressions = mutableListOf<RelationPredicate<T>>()
+        listOf(this, predicate).forEach {
+            if (it is RelationPredicate.And<T>) expressions.addAll(it.expressions)
+            else expressions.add(it)
+        }
+        RelationPredicate.And(expressions)
+    }
 
     /**
      * This class represents a property.
