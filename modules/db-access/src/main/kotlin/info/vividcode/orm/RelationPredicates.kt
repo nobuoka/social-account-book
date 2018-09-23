@@ -20,7 +20,7 @@ sealed class RelationPredicate<T : Any> {
     /**
      * This class represents SQL `in` condition.
      */
-    class In<T : Any, R : Any>(val type: KClass<T>, val property: KProperty1<T, R?>, val value: List<R>) :
+    class In<T : Any, R : Any>(val type: KClass<T>, val property: KProperty1<T, R?>, val value: Collection<R>) :
         RelationPredicate<T>()
 
     class IsNull<T : Any, R>(val type: KClass<T>, val property: KProperty1<T, R>) :
@@ -53,9 +53,9 @@ object RelationPredicateBuilder {
     /**
      * Create a object which represents SQL `in` condition.
      *
-     * @param v List of target values. If this is empty list, this condition will be always false.
+     * @param v List of target values. If empty collection is passed, this condition will be always false.
      */
-    infix fun <T : Any, E : Any> Prop<T, E?>.`in`(v: List<E>): RelationPredicate<T> =
+    infix fun <T : Any, E : Any> Prop<T, E?>.`in`(v: Collection<E>): RelationPredicate<T> =
         RelationPredicate.In(this.receiverClass, this.property, v)
 
     fun <T : Any, R : Any> of(
