@@ -4,6 +4,13 @@
 [![CircleCI](https://circleci.com/gh/nobuoka/social-balance-sheet.svg?style=svg)](https://circleci.com/gh/nobuoka/social-balance-sheet)
 [![codecov](https://codecov.io/gh/nobuoka/social-balance-sheet/branch/master/graph/badge.svg)](https://codecov.io/gh/nobuoka/social-balance-sheet)
 
+## How to run on localhost
+
+* Copy local.conf.template file to local.conf.
+* Edit local.conf file for your environment.
+* Run `Main#main` function with parameter `-config=local.conf`.
+    * For example, execute command `./gradlew :app:run --args="-config=../local.conf"`
+
 ## Heroku
 
 This application runs on Heroku.
