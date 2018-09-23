@@ -25,6 +25,13 @@ fun <T : Any> RelationPredicate<T>.toSqlWhereClause(mappingInfoRegistry: TupleCl
             WhereClause("\"$columnName\" IS NULL", emptyList())
         }
         is RelationPredicate.Converter<T, *> -> this.condition.toSqlWhereClause(mappingInfoRegistry)
+        is RelationPredicate.And -> {
+            val clauses = this.expressions.map { it.toSqlWhereClause(mappingInfoRegistry) }
+            WhereClause(
+                    clauses.joinToString(" AND ") { "(${it.whereClauseString})" },
+                    clauses.flatMap { it.valueSetterList }
+            )
+        }
     }
 
 private fun <T : Any> valueSetter(value: T): PreparedStatement.(Int) -> Unit {

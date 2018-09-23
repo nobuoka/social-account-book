@@ -230,6 +230,24 @@ internal class RelationPredicateTest {
         Assertions.assertEquals(0, sqlWhereClause.valueSetterList.size)
     }
 
+    @Test
+    internal fun andOperator() {
+        val predicate = where {
+            (TestTuple::id eq 1L) and
+                    of(TestTuple::content) { TestTuple.Content::test1.isNull } and
+                    of(TestTuple::content) { TestTuple.Content::test2 eq 20 }
+        }
+
+        val sqlWhereClause = predicate.toSqlWhereClause(tupleClassRegistry)
+        Assertions.assertEquals("(\"id\" = ?) AND (\"test1\" IS NULL) AND (\"test_2\" = ?)", sqlWhereClause.whereClauseString)
+
+        val preparedStatement = Mockito.mock(PreparedStatement::class.java)
+        invokeValueSetterList(preparedStatement, sqlWhereClause.valueSetterList)
+        Mockito.verify(preparedStatement, Mockito.times(1)).setLong(1, 1L)
+        Mockito.verify(preparedStatement, Mockito.times(1)).setInt(2, 20)
+        Mockito.verifyNoMoreInteractions(preparedStatement)
+    }
+
     private fun invokeValueSetterList(
         preparedStatement: PreparedStatement, valueSetterList: List<PreparedStatement.(Int) -> Unit>
     ) {

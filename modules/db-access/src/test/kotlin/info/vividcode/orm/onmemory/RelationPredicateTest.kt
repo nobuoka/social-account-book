@@ -68,6 +68,21 @@ internal class RelationPredicateTest {
         }
 
         @Test
+        internal fun andOperator() {
+            val predicate = where {
+                (TestTuple::id eq 1L) and
+                        of(TestTuple::content) {
+                            TestTuple.Content::test1.isNull and (TestTuple.Content::test2 eq 20)
+                        }
+            }
+
+            Assertions.assertTrue(predicate.check(TestTuple(1L, TestTuple.Content(null, 20))))
+            Assertions.assertFalse(predicate.check(TestTuple(2L, TestTuple.Content(null, 20))))
+            Assertions.assertFalse(predicate.check(TestTuple(1L, TestTuple.Content("", 20))))
+            Assertions.assertFalse(predicate.check(TestTuple(1L, TestTuple.Content(null, 21))))
+        }
+
+        @Test
         internal fun converter() {
             val predicate = where {
                 of(TestTuple::content) {
