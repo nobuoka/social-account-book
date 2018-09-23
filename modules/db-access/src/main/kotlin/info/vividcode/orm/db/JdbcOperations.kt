@@ -1,9 +1,7 @@
 package info.vividcode.orm.db
 
-import info.vividcode.orm.RelationPredicate
-import info.vividcode.orm.TupleClass
-import info.vividcode.orm.TupleClassMember
-import info.vividcode.orm.TupleClassRegistry
+import info.vividcode.orm.*
+import java.lang.Exception
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -108,8 +106,12 @@ fun insert(
 
     return if (returnGeneratedKeys) {
         listOf(s.generatedKeys.let {
-            it.next()
-            it.getLong(1)
+            try {
+                it.next()
+                it.getLong(1)
+            } catch (e: Exception) {
+                throw KdbiRuntimeException("Failed to fetch generated keys.", e)
+            }
         })
     } else {
         s.updateCount
