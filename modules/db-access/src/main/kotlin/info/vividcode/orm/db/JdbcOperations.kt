@@ -1,10 +1,10 @@
 package info.vividcode.orm.db
 
 import info.vividcode.orm.*
-import java.lang.Exception
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.SQLException
 
 fun executeQuery(
     connection: Connection,
@@ -109,7 +109,7 @@ fun insert(
             try {
                 it.next()
                 it.getLong(1)
-            } catch (e: Exception) {
+            } catch (e: SQLException) {
                 throw KdbiRuntimeException("Failed to fetch generated keys.", e)
             }
         })
