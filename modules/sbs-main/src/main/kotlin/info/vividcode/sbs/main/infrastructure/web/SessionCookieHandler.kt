@@ -4,7 +4,7 @@ import info.vividcode.sbs.main.auth.domain.SessionId
 import io.ktor.http.Cookie
 import io.ktor.request.ApplicationRequest
 import io.ktor.response.ApplicationResponse
-import java.time.Instant
+import io.ktor.util.date.GMTDate
 
 internal class SessionCookieHandler(
     private val cookieCodec: CookieCodec<SessionId>,
@@ -24,7 +24,7 @@ internal class SessionCookieHandler(
 
     internal fun clearCookieSessionId(response: ApplicationResponse) {
         response.cookies.append(
-            Cookie(sessionCookieName, "", expires = Instant.EPOCH, path = "/")
+            Cookie(sessionCookieName, "", expires = GMTDate.START, path = "/")
         )
     }
 
