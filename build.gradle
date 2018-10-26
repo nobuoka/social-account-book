@@ -1,7 +1,7 @@
 buildscript {
-    ext.kotlin_version = '1.2.51'
-    ext.ktor_version = '0.9.3'
-    ext.kotlinx_coroutines_version = '0.23.4'
+    ext.kotlin_version = '1.2.70'
+    ext.ktor_version = '0.9.5'
+    ext.kotlinx_coroutines_version = '0.25.0'
     ext.kotlinx_html_version = '0.6.11'
     ext.junit_version = '5.2.0'
     ext.slf4j_version = '1.7.25'
