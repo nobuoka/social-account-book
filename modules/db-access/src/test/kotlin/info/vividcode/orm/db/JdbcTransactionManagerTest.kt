@@ -4,14 +4,58 @@ import info.vividcode.orm.*
 import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import kotlinx.coroutines.experimental.runBlocking
 import org.h2.jdbcx.JdbcDataSource
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.AfterEachCallback
+import org.junit.jupiter.api.extension.BeforeEachCallback
+import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.api.extension.RegisterExtension
 import java.sql.Connection
 import javax.sql.DataSource
 
-internal class JdbcTransactionManagerTest {
+internal class JdbcTransactionManagerTest : TransactionManagerSpec(::createTransactionManager) {
+
+    companion object {
+        @JvmField
+        @RegisterExtension
+        internal val dataSourceExtension = DataSourceExtension()
+
+        private fun createTransactionManager(): TransactionManager<OrmContextProvider<AppOrmContext>> {
+            val coroutineDispatcher = newFixedThreadPoolContext(4, "JdbcCoroutineContext")
+            return JdbcTransactionManager(
+                    JdbcOrmContexts.createProviderFactoryFor(TransactionManagerSpec.AppOrmContext::class, coroutineDispatcher),
+                    dataSourceExtension.dataSource
+            )
+        }
+    }
+
+    internal class DataSourceExtension : BeforeEachCallback, AfterEachCallback {
+        internal val dataSource: DataSource = JdbcDataSource().apply {
+            setUrl("jdbc:h2:mem:test;TRACE_LEVEL_FILE=4")
+        }
+
+        private var connectionInternal: Connection? = null
+
+        override fun beforeEach(context: ExtensionContext?) {
+            connectionInternal = dataSource.connection.also { c ->
+                c.prepareStatement("""CREATE TABLE "foo" ( "id" BIGINT, "value1" TEXT, "value2" INTEGER )""")
+                        .executeUpdate()
+            }
+        }
+
+        override fun afterEach(context: ExtensionContext?) {
+            connectionInternal?.close()
+            connectionInternal = null
+        }
+    }
+
+}
+
+internal abstract class TransactionManagerSpec(
+        private val transactionManagerGetter: () -> TransactionManager<OrmContextProvider<AppOrmContext>>
+) {
+
+    private val transactionManager by lazy { transactionManagerGetter() }
 
     data class FooTuple(
         @AttributeName("id") val id: Long,
@@ -33,35 +77,8 @@ internal class JdbcTransactionManagerTest {
         fun FooRelation.insert(foo: FooTuple)
     }
 
-    private lateinit var dataSource: DataSource
-    private lateinit var connection: Connection
-
-    @BeforeEach
-    fun prepareDb() {
-        dataSource = JdbcDataSource().apply {
-            setUrl("jdbc:h2:mem:test;TRACE_LEVEL_FILE=4")
-        }
-        connection = dataSource.connection
-        connection.prepareStatement("""CREATE TABLE "foo" ( "id" BIGINT, "value1" TEXT, "value2" INTEGER )""")
-            .executeUpdate()
-    }
-
-    @AfterEach
-    fun finalizeDb() {
-        if (this::connection.isInitialized) {
-            connection.close()
-        }
-    }
-
     @Test
     fun commit() {
-        val jdbcCoroutineDispatcher = newFixedThreadPoolContext(4, "JdbcCoroutineContext")
-        val transactionManager: TransactionManager<OrmContextProvider<AppOrmContext>> =
-            JdbcTransactionManager(
-                JdbcOrmContexts.createProviderFactoryFor(AppOrmContext::class, jdbcCoroutineDispatcher),
-                dataSource
-            )
-
         runBlocking {
             transactionManager.withTransaction { tx ->
                 tx.withOrmContext {
@@ -85,13 +102,6 @@ internal class JdbcTransactionManagerTest {
 
     @Test
     fun rollback() {
-        val jdbcCoroutineDispatcher = newFixedThreadPoolContext(4, "JdbcCoroutineContext")
-        val transactionManager: TransactionManager<OrmContextProvider<AppOrmContext>> =
-            JdbcTransactionManager(
-                JdbcOrmContexts.createProviderFactoryFor(AppOrmContext::class, jdbcCoroutineDispatcher),
-                dataSource
-            )
-
         val exception = Assertions.assertThrows(RuntimeException::class.java) {
             runBlocking {
                 transactionManager.withTransaction { tx ->
