@@ -2,6 +2,8 @@ package info.vividcode.orm.onmemory
 
 import info.vividcode.orm.RelationPredicate
 import info.vividcode.orm.TupleClassRegistry
+import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.sendBlocking
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmErasure
 
@@ -44,7 +46,18 @@ class OnMemoryStorage {
         nameToRelationTypeValuePairMap[name] = R(tupleType, initialSet, idGenerationAttributeNames)
     }
 
-    fun createConnection(): Connection = ConnectionImpl(RelationAccessor())
+    private val connectionPool = Channel<AutoCloseableConnection>(1)
+    init {
+        connectionPool.sendBlocking(
+                object : AutoCloseableConnection, Connection by ConnectionImpl(RelationAccessor()) {
+                    override fun close() {
+                        connectionPool.sendBlocking(this)
+                    }
+                }
+        )
+    }
+
+    suspend fun getConnection(): AutoCloseableConnection = connectionPool.receive()
 
     /**
      * Returns current state of relations.
@@ -53,13 +66,29 @@ class OnMemoryStorage {
         get() = nameToRelationTypeValuePairMap.map { it.key to it.value.value }.toMap()
 
     private inner class RelationAccessor {
-        internal fun get(relationName: String): R<*> = nameToRelationTypeValuePairMap[relationName]
+        private var transactional: MutableMap<String, R<*>>? = null
+
+        internal fun get(relationName: String): R<*> = (transactional ?: nameToRelationTypeValuePairMap)[relationName]
                 ?: throw RuntimeException("Unknown relation ($relationName)")
 
         internal fun put(relationName: String, r: R<*>) {
-            nameToRelationTypeValuePairMap[relationName] = r
+            (transactional ?: nameToRelationTypeValuePairMap)[relationName] = r
+        }
+
+        internal fun startTransaction() {
+            transactional = nameToRelationTypeValuePairMap.toMutableMap()
+        }
+
+        internal fun finishTransaction(commit: Boolean) {
+            if (commit) {
+                nameToRelationTypeValuePairMap.clear()
+                nameToRelationTypeValuePairMap.putAll(requireNotNull(transactional))
+            }
+            transactional = null
         }
     }
+
+    interface AutoCloseableConnection : Connection, AutoCloseable
 
     interface Connection {
         fun <T : Any> getList(relationName: String, tupleType: KClass<T>): List<T>
@@ -73,6 +102,8 @@ class OnMemoryStorage {
         ): Int
 
         fun delete(relationName: String, predicate: RelationPredicate<*>): Int
+
+        suspend fun <T> transact(execution: suspend () -> T): T
     }
 
     private class ConnectionImpl internal constructor(private val relationAccessor: RelationAccessor) : Connection {
@@ -147,6 +178,19 @@ class OnMemoryStorage {
 
             relationAccessor.put(relationName, updateResult.first)
             return updateResult.second
+        }
+
+        override suspend fun <T> transact(execution: suspend () -> T): T {
+            relationAccessor.startTransaction()
+            var exception: Throwable? = null
+            try {
+                return execution()
+            } catch (e: Throwable) {
+                exception = e
+                throw exception
+            } finally {
+                relationAccessor.finishTransaction(exception == null)
+            }
         }
     }
 
