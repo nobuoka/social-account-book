@@ -71,7 +71,7 @@ class ObtainRedirectUrlService(private val env: Required) {
             }
         }
         env.temporaryCredentialStore.saveTemporaryCredential(temporaryCredential)
-        return "https://api.twitter.com/oauth/authenticate?oauth_token=${encodeURLQueryComponent(temporaryCredential.token)}"
+        return "https://api.twitter.com/oauth/authenticate?oauth_token=${temporaryCredential.token.encodeURLQueryComponent()}"
     }
 
     private fun authorize(
