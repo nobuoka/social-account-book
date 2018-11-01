@@ -1,6 +1,7 @@
 社会的貸借対照表 (Social B/S)
 ==========
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/44c5090c3dbf4bb1aa7375ba4477936b)](https://app.codacy.com/app/nobuoka/social-balance-sheet?utm_source=github.com&utm_medium=referral&utm_content=nobuoka/social-balance-sheet&utm_campaign=Badge_Grade_Dashboard)
 [![CircleCI](https://circleci.com/gh/nobuoka/social-balance-sheet.svg?style=svg)](https://circleci.com/gh/nobuoka/social-balance-sheet)
 [![codecov](https://codecov.io/gh/nobuoka/social-balance-sheet/branch/master/graph/badge.svg)](https://codecov.io/gh/nobuoka/social-balance-sheet)
 
