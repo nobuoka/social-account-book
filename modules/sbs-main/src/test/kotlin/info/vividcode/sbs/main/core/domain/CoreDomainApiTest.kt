@@ -21,74 +21,60 @@ internal class CoreDomainApiTest {
     internal inner class FindAccountBookOfUserTest {
         @Test
         internal fun normal_notFound() = withContext {
-            val user = createUser("Test User")
-
-            val accountBooks = findAccountBooksOfUser(user)
-
+            val testData = TestData.create(this)
+            val accountBooks = findAccountBooksOfUser(testData.userNotHavingAccountBook)
             Assertions.assertEquals(emptySet<AccountBook>(), accountBooks)
         }
 
         @Test
-        internal fun normal_found() = withContext {
-            val user = createUser("Test User")
-            val accountBook1 = createUserAccountBook(user, "Test Bank 1")
-            val accountBook2 = createUserAccountBook(user, "Test Bank 2")
-
-            val accountBooks = findAccountBooksOfUser(user)
-
-            Assertions.assertEquals(setOf(accountBook1, accountBook2), accountBooks)
-        }
-
-        @Test
-        internal fun normal_otherUser() = withContext {
-            val user = createUser("Test User")
-            val accountBook1 = createUserAccountBook(user, "Test Bank 1")
-            val accountBook2 = createUserAccountBook(user, "Test Bank 2")
-            val otherUser = createUser("Test User 2")
-            createUserAccountBook(otherUser, "Other User's Bank")
-
-            val accountBooks = findAccountBooksOfUser(user)
-
-            Assertions.assertEquals(setOf(accountBook1, accountBook2), accountBooks)
+        internal fun normal() = withContext {
+            val testData = TestData.create(this)
+            val accountBooks = findAccountBooksOfUser(testData.user)
+            Assertions.assertEquals(setOf(testData.accountBook1, testData.accountBook2), accountBooks)
         }
 
         @Test
         internal fun normal_idSpecified_empty() = withContext {
-            val user = createUser("Test User")
-            createUserAccountBook(user, "Test Bank 1")
-            createUserAccountBook(user, "Test Bank 2")
-            val otherUser = createUser("Test User 2")
-            createUserAccountBook(otherUser, "Other User's Bank")
-
-            val accountBooks = findAccountBooksOfUser(user, emptySet())
-
+            val testData = TestData.create(this)
+            val accountBooks = findAccountBooksOfUser(testData.user, emptySet())
             Assertions.assertEquals(emptySet<AccountBook>(), accountBooks)
         }
 
         @Test
         internal fun normal_idSpecified_mine() = withContext {
-            val user = createUser("Test User")
-            val accountBook1 = createUserAccountBook(user, "Test Bank 1")
-            createUserAccountBook(user, "Test Bank 2")
-            val otherUser = createUser("Test User 2")
-            createUserAccountBook(otherUser, "Other User's Bank")
-
-            val accountBooks = findAccountBooksOfUser(user, setOf(accountBook1.id))
-
-            Assertions.assertEquals(setOf(accountBook1), accountBooks)
+            val testData = TestData.create(this)
+            val accountBooks = findAccountBooksOfUser(testData.user, setOf(testData.accountBook1.id))
+            Assertions.assertEquals(setOf(testData.accountBook1), accountBooks)
         }
 
         @Test
         internal fun normal_idSpecified_otherUsers() = withContext {
-            val user = createUser("Test User")
-            createUserAccountBook(user, "Test Bank 1")
-            createUserAccountBook(user, "Test Bank 2")
-            val otherUser = createUser("Test User 2")
-            val accountBookOfOtherUser = createUserAccountBook(otherUser, "Other User's Bank")
-
-            val accountBooks = findAccountBooksOfUser(user, setOf(accountBookOfOtherUser.id))
-
+            val testData = TestData.create(this)
+            val accountBooks = findAccountBooksOfUser(testData.user, setOf(testData.accountBookOfOtherUser.id))
             Assertions.assertEquals(emptySet<AccountBook>(), accountBooks)
+        }
+    }
+
+    private class TestData(
+            val user: User,
+            val accountBook1: AccountBook,
+            val accountBook2: AccountBook,
+            val userNotHavingAccountBook: User,
+            val accountBookOfOtherUser: AccountBook
+    ) {
+        companion object {
+            fun create(context: AppOrmContext) = with (context) {
+                val user = createUser("Test User")
+                val userNotHavingAccountBook = createUser("Test User 2")
+                val otherUser = createUser("Test User 3")
+                TestData(
+                        user = user,
+                        accountBook1 = createUserAccountBook(user, "Test Bank 1"),
+                        accountBook2 = createUserAccountBook(user, "Test Bank 2"),
+                        userNotHavingAccountBook = userNotHavingAccountBook,
+                        accountBookOfOtherUser = createUserAccountBook(otherUser, "Other User's Bank")
+                )
+            }
         }
     }
 
