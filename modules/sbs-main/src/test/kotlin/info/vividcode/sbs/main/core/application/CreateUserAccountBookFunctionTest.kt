@@ -4,8 +4,8 @@ import info.vividcode.orm.where
 import info.vividcode.sbs.main.application.test.TestTransactionManagerExtension
 import info.vividcode.sbs.main.application.test.createTestAppStorage
 import info.vividcode.sbs.main.core.domain.User
-import info.vividcode.sbs.main.core.domain.createUserAccount
-import info.vividcode.sbs.main.core.domain.infrastructure.*
+import info.vividcode.sbs.main.core.domain.infrastructure.UserTuple
+import info.vividcode.sbs.main.core.domain.infrastructure.from
 import kotlinx.coroutines.experimental.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -24,9 +24,6 @@ internal class CreateUserAccountBookFunctionTest {
     @Test
     internal fun simple(): Unit = runBlocking {
         val testTargetUser = createUser("test-user-1")
-        createUserAccounts(testTargetUser, listOf("Test Mega Bank", "Cash stash"))
-        val testUser2 = createUser("test-user-2")
-        createUserAccounts(testUser2, listOf("Test City Bank", "Wallet"))
 
         val testAccountBookLabel = "Test Account Book"
 
@@ -44,14 +41,6 @@ internal class CreateUserAccountBookFunctionTest {
                 requireNotNull(users.select(where { UserTuple::id eq userId }).toSet().firstOrNull())
             }
         }.let(User.Companion::from)
-    }
-
-    private suspend fun createUserAccounts(user: User, labels: List<String>) {
-        txManager.withOrmContext {
-            labels.forEach {
-                createUserAccount(user, it)
-            }
-        }
     }
 
 }

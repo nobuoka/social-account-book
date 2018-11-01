@@ -11,7 +11,6 @@ internal interface CoreOrmContext : OrmQueryContext {
     val accountBooks: AccountBooksRelation
     val userAccountBooks: UserAccountBooksRelation
     val accounts: AccountsRelation
-    val userAccounts: UserAccountsRelation
 
     /**
      * Insert [UserTuple] into [UsersRelation].
@@ -36,12 +35,6 @@ internal interface CoreOrmContext : OrmQueryContext {
      */
     @Insert(returnGeneratedKeys = true)
     fun AccountsRelation.insert(content: AccountTuple.Content): Long
-
-    /**
-     * Insert [UserAccountTuple] into [UserAccountsRelation].
-     */
-    @Insert
-    fun UserAccountsRelation.insert(content: UserAccountTuple)
 
 }
 
@@ -83,17 +76,11 @@ internal data class AccountTuple(
     @AttributeName("id") val id: Long,
     val content: Content
 ) {
-    internal data class Content(@AttributeName("label") val label: String)
+    internal data class Content(
+            @AttributeName("account_book_id") val accountBookId: Long,
+            @AttributeName("label") val label: String
+    )
 }
 
 internal fun Account.Companion.from(tuple: AccountTuple) =
     Account(tuple.id, tuple.content.label)
-
-@RelationName("user_accounts")
-internal interface UserAccountsRelation : BareRelation<UserAccountTuple>
-
-internal data class UserAccountTuple(
-    @AttributeName("user_id") val userId: Long,
-    @AttributeName("account_id") val accountId: Long
-)
-

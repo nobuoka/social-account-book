@@ -35,10 +35,6 @@ CREATE TABLE "user_account_books" (
 
 CREATE TABLE "accounts" (
   "id" BIGSERIAL NOT NULL PRIMARY KEY,
+  "account_book_id" BIGINT NOT NULL,
   "label" VARCHAR(128) NOT NULL
-);
-
-CREATE TABLE "user_accounts" (
-  "user_id" BIGINT NOT NULL,
-  "account_id" BIGINT NOT NULL
 );

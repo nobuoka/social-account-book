@@ -4,7 +4,8 @@ import info.vividcode.orm.where
 import info.vividcode.sbs.main.H2DatabaseTestExtension
 import info.vividcode.sbs.main.core.domain.Account
 import info.vividcode.sbs.main.core.domain.User
-import info.vividcode.sbs.main.core.domain.createUserAccount
+import info.vividcode.sbs.main.core.domain.createAccount
+import info.vividcode.sbs.main.core.domain.createUserAccountBook
 import info.vividcode.sbs.main.core.domain.infrastructure.UserTuple
 import info.vividcode.sbs.main.core.domain.infrastructure.from
 import info.vividcode.sbs.main.infrastructure.database.createTransactionManager
@@ -72,8 +73,9 @@ internal class FindUserAccountsServiceTest {
 
     private suspend fun createUserAccounts(user: User, labels: List<String>) {
         txManager.withOrmContext {
+            val defaultAccountBook = createUserAccountBook(user, "default")
             labels.forEach {
-                createUserAccount(user, it)
+                createAccount(defaultAccountBook, it)
             }
         }
     }
