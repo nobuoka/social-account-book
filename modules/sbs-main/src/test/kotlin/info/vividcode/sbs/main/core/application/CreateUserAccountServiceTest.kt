@@ -3,6 +3,7 @@ package info.vividcode.sbs.main.core.application
 import info.vividcode.orm.where
 import info.vividcode.sbs.main.H2DatabaseTestExtension
 import info.vividcode.sbs.main.core.domain.User
+import info.vividcode.sbs.main.core.domain.createUserAccountBook
 import info.vividcode.sbs.main.core.domain.infrastructure.UserTuple
 import info.vividcode.sbs.main.core.domain.infrastructure.from
 import info.vividcode.sbs.main.infrastructure.database.createTransactionManager
@@ -37,11 +38,40 @@ internal class CreateUserAccountServiceTest {
         val testAccountLabel = "Test Account"
         val testActor = createUser("test-user")
 
+        // Arrange
+        val accountBook = txManager.withTransaction {
+            it.withOrmContext {
+                createUserAccountBook(testActor, "Test Account Book")
+            }
+        }
+
         // Act
-        val account = testTarget.createUserAccount(testActor, testAccountLabel)
+        val accountBookAndAccountPair = testTarget.createUserAccount(testActor, accountBook.id, testAccountLabel)
 
         // Assert
-        Assertions.assertEquals(testAccountLabel, account.label)
+        Assertions.assertEquals(testAccountLabel, accountBookAndAccountPair.second.label)
+    }
+
+    @Test
+    internal fun targetAccountBookIsOthers(): Unit = runBlocking {
+        val testAccountLabel = "Test Account"
+        val testActor = createUser("test-user")
+        val otherUser = createUser("other-user")
+
+        // Arrange
+        val accountBookOfOtherUser = txManager.withTransaction {
+            it.withOrmContext {
+                createUserAccountBook(testActor, "Test Account Book")
+                createUserAccountBook(otherUser, "Test Account Book of Other User")
+            }
+        }
+
+        val exception = Assertions.assertThrows(RuntimeException::class.java) {
+            runBlocking {
+                testTarget.createUserAccount(testActor, accountBookOfOtherUser.id, testAccountLabel)
+            }
+        }
+        Assertions.assertNull(exception.message)
     }
 
     private fun createUser(userName: String): User = runBlocking {

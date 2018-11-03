@@ -30,10 +30,6 @@ internal fun CoreOrmContext.createUser(displayName: String): User {
     return User.from(UserTuple(id, content))
 }
 
-internal fun CoreOrmContext.findOrCreateDefaultUserAccountBook(targetUser: User): AccountBook =
-        findAccountBooksOfUser(targetUser).find { it.label == "default" }
-                ?: createUserAccountBook(targetUser, "default")
-
 internal fun CoreOrmContext.createUserAccountBook(targetUser: User, accountBookLabel: String): AccountBook {
     val accountBookId = accountBooks.insert(AccountBookTuple.Content(accountBookLabel))
     userAccountBooks.insert(UserAccountBookTuple(targetUser.id, accountBookId))

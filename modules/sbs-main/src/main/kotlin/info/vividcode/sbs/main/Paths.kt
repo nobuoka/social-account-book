@@ -1,5 +1,6 @@
 package info.vividcode.sbs.main
 
+import info.vividcode.sbs.main.core.domain.AccountBook
 import info.vividcode.sbs.main.core.domain.User
 import io.ktor.application.ApplicationCall
 import io.ktor.request.ApplicationRequest
@@ -16,6 +17,21 @@ object UrlPaths {
             const val parameterized = "/-/up/{userId}"
             internal fun concrete(user: User) = "/-/up/${user.id}"
             internal fun getUserId(request: ApplicationCall) = request.parameters["userId"]
+        }
+
+        internal object AccountBooks {
+            const val parameterized = "/-/up/{userId}/account-books"
+            internal fun concrete(user: User) = "/-/up/${user.id}/account-books"
+            internal fun getUserId(request: ApplicationCall) = request.parameters["userId"]
+        }
+
+        internal object AccountBookPath {
+            private const val paramNameUserId = "userId"
+            private const val paramNameAccountBookId = "accountBookId"
+            const val parameterized = "/-/up/{$paramNameUserId}/account-books/{$paramNameAccountBookId}"
+            internal fun concrete(user: User, accountBook: AccountBook) = "/-/up/${user.id}/account-books/${accountBook.id}"
+            internal fun getUserId(request: ApplicationCall) = request.parameters[paramNameUserId]
+            internal fun getAccountBookId(request: ApplicationCall) = request.parameters[paramNameAccountBookId]
         }
 
         internal object Accounts {

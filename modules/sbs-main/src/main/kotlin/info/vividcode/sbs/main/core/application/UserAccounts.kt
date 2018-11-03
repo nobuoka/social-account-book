@@ -1,29 +1,32 @@
 package info.vividcode.sbs.main.core.application
 
 import info.vividcode.orm.whereOf
-import info.vividcode.sbs.main.core.domain.Account
-import info.vividcode.sbs.main.core.domain.User
-import info.vividcode.sbs.main.core.domain.createAccount
-import info.vividcode.sbs.main.core.domain.findOrCreateDefaultUserAccountBook
+import info.vividcode.sbs.main.core.domain.*
 import info.vividcode.sbs.main.core.domain.infrastructure.AccountTuple
 import info.vividcode.sbs.main.core.domain.infrastructure.from
 
 internal class CreateUserAccountService(private val txManager: CoreTxManager) {
 
-    internal suspend fun createUserAccount(actor: User, accountLabel: String): Account =
+    internal suspend fun createUserAccount(actor: User, accountBookId: Long, accountLabel: String): Pair<AccountBook, Account> =
         txManager.withOrmContext {
-            val defaultAccountBook = findOrCreateDefaultUserAccountBook(actor)
-            createAccount(defaultAccountBook, accountLabel)
+            val accountBook = findAccountBooksOfUser(actor, setOf(accountBookId)).firstOrNull()
+                    ?: throw RuntimeException()
+            Pair(accountBook, createAccount(accountBook, accountLabel))
         }
 
 }
 
-internal class FindUserAccountsService(private val txManager: CoreTxManager) {
+internal class FindAccountsForAccountBooksFunction(private val txManager: CoreTxManager) {
 
-    internal suspend fun findUserAccounts(actor: User): List<Account> =
+    internal suspend operator fun invoke(actor: User, accountBookIds: Set<Long>): Map<AccountBook, List<Account>> =
         txManager.withOrmContext {
-            val defaultAccountBook = findOrCreateDefaultUserAccountBook(actor)
-            accounts.select(whereOf(AccountTuple::content) { AccountTuple.Content::accountBookId eq defaultAccountBook.id }).toSet()
-        }.map(Account.Companion::from).sortedBy(Account::id)
+            val accountBooks = findAccountBooksOfUser(actor, accountBookIds)
+            val accountTuples = accounts.select(whereOf(AccountTuple::content) {
+                p(AccountTuple.Content::accountBookId) `in` accountBooks.map { it.id }
+            }).toSet()
+            accountBooks.map { accountBook ->
+                accountBook to accountTuples.asSequence().filter { it.content.accountBookId == accountBook.id }.map { Account.from(it) }.toList()
+            }.toMap()
+        }
 
 }
