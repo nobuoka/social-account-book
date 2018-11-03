@@ -28,6 +28,14 @@ jobs:
             - ~/.gradle
             - ~/.m2
           key: gradle-{{ checksum "~/cache-key-source-gradle" }}
+      - store_test_results:
+          path: modules/db-access/build/test-results
+      - store_test_results:
+          path: modules/ktor-twitter-login/build/test-results
+      - store_test_results:
+          path: modules/whatwg-url/build/test-results
+      - store_test_results:
+          path: modules/sbs-main/build/test-results
       - persist_to_workspace:
           root: ~/project
           paths:
