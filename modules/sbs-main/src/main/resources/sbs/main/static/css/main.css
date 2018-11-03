@@ -11,3 +11,20 @@ body {
 
     font-family: "Times", serif;
 }
+
+header {
+    margin: -8px;
+    padding: 8px;
+    border: solid 2px white;
+
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-flow: row;
+    flex-flow: row;
+
+    align-items: center;
+}
+
+header > .service-name {
+    flex: 1 0 auto;
+}
