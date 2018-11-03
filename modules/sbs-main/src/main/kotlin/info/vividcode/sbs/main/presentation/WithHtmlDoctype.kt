@@ -8,3 +8,8 @@ fun withHtmlDoctype(consume: suspend TagConsumer<*>.() -> Unit): suspend Writer.
     write("<!DOCTYPE html>\n")
     appendHTML().consume()
 }
+
+fun withHtmlDoctype(consume: TagConsumer<*>.() -> Unit): suspend Writer.() -> Unit = {
+    write("<!DOCTYPE html>\n")
+    appendHTML().consume()
+}

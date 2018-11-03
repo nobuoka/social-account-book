@@ -1,16 +1,17 @@
 package info.vividcode.sbs.main.presentation.up
 
+import info.vividcode.sbs.main.core.domain.Account
 import info.vividcode.sbs.main.core.domain.AccountBook
 import info.vividcode.sbs.main.core.domain.User
 import kotlinx.html.*
 
-internal fun userPrivateHomeHtml(
+internal fun userPrivateAccountBookHtml(
         actor: User,
-        userAccountBooks: List<AccountBook>,
+        accountBook: AccountBook,
+        accounts: List<Account>,
         logoutPath: String,
-        userAccountBooksPath: String,
-        userPrivateAccountBookPathGenerator: (accountBook: AccountBook) -> String
-): suspend TagConsumer<*>.() -> Unit = {
+        userAccountsPath: String
+): TagConsumer<*>.() -> Unit = {
     html {
         head {
             meta(name = "viewport", content = "width=device-width,initial-scale=1")
@@ -30,25 +31,26 @@ internal fun userPrivateHomeHtml(
             }
 
             div {
-                h2 { +"Your account books"}
-                h3 { +"Add account book" }
-                form(method = FormMethod.post, action = userAccountBooksPath) {
+                h2 { +"Account book : ${accountBook.label}" }
+
+                h3 { +"Accounts"}
+                h4 { +"Add account" }
+                form(method = FormMethod.post, action = userAccountsPath) {
                     textInput(name = "label")
+                    hiddenInput(name = "account-book-id") {
+                        value = "${accountBook.id}"
+                    }
                     submitInput {
-                        value = "Create account book"
+                        value = "Create account"
                     }
                 }
-                h3 { +"Current account books" }
-                if (userAccountBooks.isEmpty()) {
+                h4 { +"Current accounts" }
+                if (accounts.isEmpty()) {
                     span { +"Not added yet." }
                 } else {
                     ul {
-                        userAccountBooks.forEach { accountBook ->
-                            li {
-                                a(href = userPrivateAccountBookPathGenerator(accountBook)) {
-                                    +accountBook.label
-                                }
-                            }
+                        accounts.forEach { account ->
+                            li { +account.label }
                         }
                     }
                 }

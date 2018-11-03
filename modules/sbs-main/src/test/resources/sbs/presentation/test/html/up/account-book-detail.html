@@ -10,12 +10,13 @@
     <div><span>Hi, test-user!</span></div>
     <form action="/logout" method="post"><input type="submit" value="Sign out"></form>
     <div>
-      <h2>Your account books</h2>
-      <h3>Add account book</h3>
-      <form action="/account-books" method="post"><input type="text" name="label"><input type="submit" value="Create account book"></form>
-      <h3>Current account books</h3>
+      <h2>Account book : Test account book</h2>
+      <h3>Accounts</h3>
+      <h4>Add account</h4>
+      <form action="/accounts" method="post"><input type="text" name="label"><input type="hidden" name="account-book-id" value="1"><input type="submit" value="Create account"></form>
+      <h4>Current accounts</h4>
       <ul>
-        <li><a href="/account-books/1">Test Bank</a></li>
+        <li>Test account</li>
       </ul>
     </div>
   </body>

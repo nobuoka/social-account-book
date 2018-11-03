@@ -11,16 +11,14 @@ import info.vividcode.sbs.main.auth.application.CreateNewSessionService
 import info.vividcode.sbs.main.auth.application.DeleteSessionService
 import info.vividcode.sbs.main.auth.application.RetrieveActorUserService
 import info.vividcode.sbs.main.auth.application.TemporaryCredentialStoreImpl
-import info.vividcode.sbs.main.core.application.CreateUserAccountService
-import info.vividcode.sbs.main.core.application.CreateUserService
-import info.vividcode.sbs.main.core.application.FindUserAccountsService
-import info.vividcode.sbs.main.core.application.FindUserService
+import info.vividcode.sbs.main.core.application.*
 import info.vividcode.sbs.main.core.domain.User
 import info.vividcode.sbs.main.infrastructure.database.createTransactionManager
 import info.vividcode.sbs.main.infrastructure.web.SessionCookieEncrypt
 import info.vividcode.sbs.main.infrastructure.web.SessionCookieHandler
 import info.vividcode.sbs.main.presentation.TopHtmlPresentationModel
 import info.vividcode.sbs.main.presentation.topHtml
+import info.vividcode.sbs.main.presentation.up.userPrivateAccountBookHtml
 import info.vividcode.sbs.main.presentation.up.userPrivateHomeHtml
 import info.vividcode.sbs.main.presentation.withHtmlDoctype
 import io.ktor.application.Application
@@ -91,7 +89,9 @@ fun Application.setup(env: Env? = null) {
     val createNewSessionService = CreateNewSessionService(transactionManager, findUerService, createUserService)
     val deleteSessionService = DeleteSessionService(transactionManager)
 
-    val findUserAccountsService = FindUserAccountsService(transactionManager)
+    val findUserAccountBooks = FindUserAccountBooksFunction(transactionManager)
+    val createUserAccountBook = CreateUserAccountBookFunction(transactionManager)
+    val findAccountsOfAccountBooks = FindAccountsForAccountBooksFunction(transactionManager)
     val createUserAccountService = CreateUserAccountService(transactionManager)
 
     intercept(ApplicationCallPipeline.Call) {
@@ -144,10 +144,56 @@ fun Application.setup(env: Env? = null) {
                 if (actorUser.id != targetUserId) {
                     // Not found.
                 } else {
-                    val userAccounts = findUserAccountsService.findUserAccounts(actorUser)
-                    val userAccountsPath = UrlPaths.UserPrivate.Accounts.concrete(actorUser)
+                    val userAccountBooks = findUserAccountBooks(actorUser)
                     val htmlOutput =
-                        withHtmlDoctype(userPrivateHomeHtml(actorUser, userAccounts, UrlPaths.logout, userAccountsPath))
+                        withHtmlDoctype(userPrivateHomeHtml(actorUser, userAccountBooks,
+                                logoutPath = UrlPaths.logout,
+                                userAccountBooksPath = UrlPaths.UserPrivate.AccountBooks.concrete(actorUser),
+                                userPrivateAccountBookPathGenerator = { UrlPaths.UserPrivate.AccountBookPath.concrete(actorUser, it) }
+                        ))
+                    call.respondWrite(Html, OK, htmlOutput)
+                }
+            }
+        }
+
+        post(UrlPaths.UserPrivate.AccountBooks.parameterized) {
+            call.request.getActorUserOrNull()?.let { actorUser ->
+                val targetUserId = UrlPaths.UserPrivate.AccountBooks.getUserId(call)?.toLongOrNull()
+
+                val requestBody = try {
+                    call.receive<Parameters>()
+                } catch (e: ContentTransformationException) {
+                    log.warn("Request body cannot be received.", e)
+                    Parameters.Empty
+                }
+                val label = requestBody["label"] ?: "(Label not specified)"
+
+                if (actorUser.id != targetUserId) {
+                    // Not found.
+                } else {
+                    createUserAccountBook(actorUser, label)
+                    val userPrivateHomePath = UrlPaths.UserPrivate.Home.concrete(actorUser)
+                    call.respondRedirect(userPrivateHomePath, false)
+                }
+            }
+        }
+
+        get(UrlPaths.UserPrivate.AccountBookPath.parameterized) {
+            call.request.getActorUserOrNull()?.let { actorUser ->
+                val targetUserId = UrlPaths.UserPrivate.AccountBookPath.getUserId(call)?.toLongOrNull()
+                val targetAccountBookId = UrlPaths.UserPrivate.AccountBookPath.getAccountBookId(call)?.toLongOrNull()
+
+                if (actorUser.id != targetUserId || targetAccountBookId == null) {
+                    // Not found.
+                } else {
+                    val accountBooksWithAccounts = findAccountsOfAccountBooks(actorUser, setOf(targetAccountBookId))
+                    val accountBook = accountBooksWithAccounts.keys.first { it.id == targetAccountBookId }
+                    val accounts = accountBooksWithAccounts[accountBook] ?: emptyList()
+                    val htmlOutput =
+                            withHtmlDoctype(userPrivateAccountBookHtml(actorUser, accountBook, accounts,
+                                    logoutPath = UrlPaths.logout,
+                                    userAccountsPath = UrlPaths.UserPrivate.Accounts.concrete(actorUser)
+                            ))
                     call.respondWrite(Html, OK, htmlOutput)
                 }
             }
@@ -164,13 +210,16 @@ fun Application.setup(env: Env? = null) {
                     Parameters.Empty
                 }
                 val label = requestBody["label"] ?: "(Label not specified)"
+                val accountBookId = requestBody["account-book-id"]?.toLongOrNull()
+                        ?: throw RuntimeException("account-book-id not specified")
 
                 if (actorUser.id != targetUserId) {
                     // Not found.
                 } else {
-                    createUserAccountService.createUserAccount(actorUser, label)
-                    val userPrivateHomePath = UrlPaths.UserPrivate.Home.concrete(actorUser)
-                    call.respondRedirect(userPrivateHomePath, false)
+                    val accountBookAndAccountPair = createUserAccountService.createUserAccount(actorUser, accountBookId, label)
+                    val userPrivateAccountBookPath =
+                            UrlPaths.UserPrivate.AccountBookPath.concrete(actorUser, accountBookAndAccountPair.first)
+                    call.respondRedirect(userPrivateAccountBookPath, false)
                 }
             }
         }
