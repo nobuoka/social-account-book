@@ -14,31 +14,22 @@ internal fun userPrivateHomeHtml(
     html {
         head {
             meta(name = "viewport", content = "width=device-width,initial-scale=1")
-            title("Social B/S")
+            title("Account books - Social B/S")
             styleLink("/static/css/main.css")
         }
         body {
-            h1 { +"Social B/S" }
+            userPrivateHeaderFragment(actor, logoutPath)
 
             div {
-                span { +"Hi, ${actor.displayName}!" }
-            }
-            form(method = FormMethod.post, action = logoutPath) {
-                submitInput {
-                    value = "Sign out"
-                }
-            }
-
-            div {
-                h2 { +"Your account books"}
-                h3 { +"Add account book" }
+                h1 { +"Your account books"}
+                h2 { +"Add account book" }
                 form(method = FormMethod.post, action = userAccountBooksPath) {
                     textInput(name = "label")
                     submitInput {
                         value = "Create account book"
                     }
                 }
-                h3 { +"Current account books" }
+                h2 { +"Current account books" }
                 if (userAccountBooks.isEmpty()) {
                     span { +"Not added yet." }
                 } else {

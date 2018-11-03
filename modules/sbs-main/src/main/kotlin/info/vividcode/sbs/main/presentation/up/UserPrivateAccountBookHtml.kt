@@ -15,26 +15,17 @@ internal fun userPrivateAccountBookHtml(
     html {
         head {
             meta(name = "viewport", content = "width=device-width,initial-scale=1")
-            title("Social B/S")
+            title("Account book : ${accountBook.label} - Social B/S")
             styleLink("/static/css/main.css")
         }
         body {
-            h1 { +"Social B/S" }
+            userPrivateHeaderFragment(actor, logoutPath)
 
             div {
-                span { +"Hi, ${actor.displayName}!" }
-            }
-            form(method = FormMethod.post, action = logoutPath) {
-                submitInput {
-                    value = "Sign out"
-                }
-            }
+                h1 { +"Account book : ${accountBook.label}" }
 
-            div {
-                h2 { +"Account book : ${accountBook.label}" }
-
-                h3 { +"Accounts"}
-                h4 { +"Add account" }
+                h2 { +"Accounts"}
+                h3 { +"Add account" }
                 form(method = FormMethod.post, action = userAccountsPath) {
                     textInput(name = "label")
                     hiddenInput(name = "account-book-id") {
@@ -44,7 +35,7 @@ internal fun userPrivateAccountBookHtml(
                         value = "Create account"
                     }
                 }
-                h4 { +"Current accounts" }
+                h3 { +"Current accounts" }
                 if (accounts.isEmpty()) {
                     span { +"Not added yet." }
                 } else {

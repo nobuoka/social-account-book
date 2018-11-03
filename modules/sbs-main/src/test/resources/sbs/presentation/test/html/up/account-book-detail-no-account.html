@@ -2,19 +2,23 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Social B/S</title>
+    <title>Account book : Test account book - Social B/S</title>
     <link rel="Stylesheet" type="text/css" href="/static/css/main.css">
   </head>
   <body>
-    <h1>Social B/S</h1>
-    <div><span>Hi, test-user!</span></div>
-    <form action="/logout" method="post"><input type="submit" value="Sign out"></form>
+    <header>
+      <div class="service-name"><span>Social B/S</span></div>
+      <div class="actor-info">
+        <div><span>Hi, test-user!</span></div>
+        <form action="/logout" method="post"><input type="submit" value="Sign out"></form>
+      </div>
+    </header>
     <div>
-      <h2>Account book : Test account book</h2>
-      <h3>Accounts</h3>
-      <h4>Add account</h4>
+      <h1>Account book : Test account book</h1>
+      <h2>Accounts</h2>
+      <h3>Add account</h3>
       <form action="/accounts" method="post"><input type="text" name="label"><input type="hidden" name="account-book-id" value="1"><input type="submit" value="Create account"></form>
-      <h4>Current accounts</h4>
+      <h3>Current accounts</h3>
 <span>Not added yet.</span></div>
   </body>
 </html>

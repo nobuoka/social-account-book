@@ -2,18 +2,22 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Social B/S</title>
+    <title>Account books - Social B/S</title>
     <link rel="Stylesheet" type="text/css" href="/static/css/main.css">
   </head>
   <body>
-    <h1>Social B/S</h1>
-    <div><span>Hi, test-user!</span></div>
-    <form action="/logout" method="post"><input type="submit" value="Sign out"></form>
+    <header>
+      <div class="service-name"><span>Social B/S</span></div>
+      <div class="actor-info">
+        <div><span>Hi, test-user!</span></div>
+        <form action="/logout" method="post"><input type="submit" value="Sign out"></form>
+      </div>
+    </header>
     <div>
-      <h2>Your account books</h2>
-      <h3>Add account book</h3>
+      <h1>Your account books</h1>
+      <h2>Add account book</h2>
       <form action="/account-books" method="post"><input type="text" name="label"><input type="submit" value="Create account book"></form>
-      <h3>Current account books</h3>
+      <h2>Current account books</h2>
 <span>Not added yet.</span></div>
   </body>
 </html>
