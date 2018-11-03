@@ -3,7 +3,7 @@ package info.vividcode.sbs.main.core.application
 import info.vividcode.sbs.main.H2DatabaseTestExtension
 import info.vividcode.sbs.main.core.domain.infrastructure.UserTuple
 import info.vividcode.sbs.main.infrastructure.database.createTransactionManager
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach

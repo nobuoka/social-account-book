@@ -6,7 +6,7 @@ import info.vividcode.orm.db.JdbcOrmContexts
 import info.vividcode.orm.db.JdbcTransactionManager
 import info.vividcode.sbs.main.auth.domain.infrastructure.AuthOrmContext
 import info.vividcode.sbs.main.core.domain.infrastructure.CoreOrmContext
-import kotlinx.coroutines.experimental.newFixedThreadPoolContext
+import kotlinx.coroutines.newFixedThreadPoolContext
 import javax.sql.DataSource
 
 internal interface AppOrmContext : CoreOrmContext, AuthOrmContext

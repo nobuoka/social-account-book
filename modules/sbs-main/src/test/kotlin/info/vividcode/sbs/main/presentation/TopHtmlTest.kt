@@ -1,7 +1,7 @@
 package info.vividcode.sbs.main.presentation
 
 import info.vividcode.sbs.main.core.domain.User
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import java.io.CharArrayWriter
 import java.nio.charset.StandardCharsets

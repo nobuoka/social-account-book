@@ -3,7 +3,7 @@ package info.vividcode.orm.onmemory
 import info.vividcode.orm.OrmContextProvider
 import info.vividcode.orm.TransactionManager
 import info.vividcode.orm.common.TransactionManagerSpec
-import kotlinx.coroutines.experimental.newFixedThreadPoolContext
+import kotlinx.coroutines.newFixedThreadPoolContext
 import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext

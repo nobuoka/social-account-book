@@ -7,8 +7,8 @@ import info.vividcode.orm.common.BareRelationExtensionMethodInvocation
 import info.vividcode.orm.common.OrmContextInvocationHandler
 import info.vividcode.orm.common.OrmQueryContextFunctionInvocation
 import info.vividcode.orm.common.RelvarUpdater
-import kotlinx.coroutines.experimental.CoroutineDispatcher
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
 import kotlin.reflect.full.cast

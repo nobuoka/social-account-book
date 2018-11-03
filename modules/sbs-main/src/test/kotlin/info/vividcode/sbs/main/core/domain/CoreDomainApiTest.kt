@@ -3,7 +3,7 @@ package info.vividcode.sbs.main.core.domain
 import info.vividcode.sbs.main.application.test.TestTransactionManagerExtension
 import info.vividcode.sbs.main.application.test.createTestAppStorage
 import info.vividcode.sbs.main.infrastructure.database.AppOrmContext
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

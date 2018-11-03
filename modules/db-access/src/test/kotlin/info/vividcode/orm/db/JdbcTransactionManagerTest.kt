@@ -2,7 +2,7 @@ package info.vividcode.orm.db
 
 import info.vividcode.orm.*
 import info.vividcode.orm.common.TransactionManagerSpec
-import kotlinx.coroutines.experimental.newFixedThreadPoolContext
+import kotlinx.coroutines.newFixedThreadPoolContext
 import org.h2.jdbcx.JdbcDataSource
 import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback

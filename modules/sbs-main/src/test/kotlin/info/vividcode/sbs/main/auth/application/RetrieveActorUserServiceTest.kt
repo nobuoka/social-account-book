@@ -8,7 +8,7 @@ import info.vividcode.sbs.main.core.domain.User
 import info.vividcode.sbs.main.infrastructure.database.createTransactionManager
 import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach

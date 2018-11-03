@@ -3,9 +3,9 @@ package info.vividcode.ktor.twitter.login
 import info.vividcode.ktor.twitter.login.application.ObtainRedirectUrlService
 import info.vividcode.ktor.twitter.login.application.ObtainTwitterTokenService
 import info.vividcode.oauth.OAuth
-import kotlinx.coroutines.experimental.newSingleThreadContext
+import kotlinx.coroutines.newSingleThreadContext
 import okhttp3.OkHttpClient
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 interface Env : ObtainRedirectUrlService.Required, ObtainTwitterTokenService.Required {
 

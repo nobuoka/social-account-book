@@ -8,7 +8,7 @@ import info.vividcode.sbs.main.core.domain.User
 import info.vividcode.sbs.main.core.domain.createUserAccountBook
 import info.vividcode.sbs.main.core.domain.infrastructure.UserTuple
 import info.vividcode.sbs.main.core.domain.infrastructure.from
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension

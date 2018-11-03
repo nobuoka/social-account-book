@@ -17,7 +17,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.*
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.h2.jdbcx.JdbcDataSource
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Nested

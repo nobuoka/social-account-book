@@ -1,7 +1,7 @@
 package info.vividcode.orm.onmemory
 
 import info.vividcode.orm.TupleClassRegistry
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

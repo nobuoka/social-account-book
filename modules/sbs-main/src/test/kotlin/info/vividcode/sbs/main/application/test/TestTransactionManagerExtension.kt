@@ -6,7 +6,7 @@ import info.vividcode.orm.onmemory.OnMemoryOrmContexts
 import info.vividcode.orm.onmemory.OnMemoryStorage
 import info.vividcode.orm.onmemory.OnMemoryTransactionManager
 import info.vividcode.sbs.main.infrastructure.database.AppOrmContext
-import kotlinx.coroutines.experimental.newFixedThreadPoolContext
+import kotlinx.coroutines.newFixedThreadPoolContext
 import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
