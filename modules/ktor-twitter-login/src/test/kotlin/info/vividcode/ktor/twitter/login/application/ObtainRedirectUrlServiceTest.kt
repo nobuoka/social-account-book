@@ -4,8 +4,8 @@ import info.vividcode.ktor.twitter.login.ClientCredential
 import info.vividcode.ktor.twitter.login.TemporaryCredentialStore
 import info.vividcode.ktor.twitter.login.test.TestCallFactory
 import info.vividcode.oauth.OAuth
-import kotlinx.coroutines.experimental.newSingleThreadContext
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.runBlocking
 import okhttp3.Call
 import okhttp3.MediaType
 import okhttp3.ResponseBody
@@ -15,7 +15,7 @@ import java.io.IOException
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 internal class ObtainRedirectUrlServiceTest {
 

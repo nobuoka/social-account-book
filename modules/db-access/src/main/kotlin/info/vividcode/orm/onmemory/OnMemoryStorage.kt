@@ -2,8 +2,8 @@ package info.vividcode.orm.onmemory
 
 import info.vividcode.orm.RelationPredicate
 import info.vividcode.orm.TupleClassRegistry
-import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.channels.sendBlocking
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.sendBlocking
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmErasure
 

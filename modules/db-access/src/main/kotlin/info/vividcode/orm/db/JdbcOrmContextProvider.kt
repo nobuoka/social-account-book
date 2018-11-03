@@ -1,8 +1,8 @@
 package info.vividcode.orm.db
 
 import info.vividcode.orm.OrmContextProvider
-import kotlinx.coroutines.experimental.CoroutineDispatcher
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import java.sql.Connection
 import kotlin.reflect.KClass
 

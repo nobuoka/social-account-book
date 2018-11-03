@@ -1,7 +1,7 @@
 package info.vividcode.orm.common
 
 import info.vividcode.orm.*
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 

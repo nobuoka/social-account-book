@@ -7,8 +7,8 @@ import info.vividcode.ktor.twitter.login.TwitterToken
 import info.vividcode.ktor.twitter.login.test.TestCallFactory
 import info.vividcode.ktor.twitter.login.test.TestTemporaryCredentialStore
 import info.vividcode.oauth.OAuth
-import kotlinx.coroutines.experimental.newSingleThreadContext
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.runBlocking
 import okhttp3.*
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Nested
@@ -17,7 +17,7 @@ import java.io.IOException
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 internal class ObtainTwitterTokenServiceTest {
 

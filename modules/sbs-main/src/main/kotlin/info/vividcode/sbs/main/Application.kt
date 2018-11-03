@@ -41,13 +41,13 @@ import io.ktor.response.respondWrite
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
-import kotlinx.coroutines.experimental.newFixedThreadPoolContext
+import kotlinx.coroutines.newFixedThreadPoolContext
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.flywaydb.core.Flyway
 import java.time.Clock
 import java.util.*
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 fun Application.setup(env: Env? = null) {
     val appContextUrl = environment.config.property("sbs.contextUrl").getString()
