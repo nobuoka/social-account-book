@@ -51,7 +51,7 @@ import kotlin.coroutines.CoroutineContext
 
 fun Application.setup(env: Env? = null) {
     val appContextUrl = environment.config.property("sbs.contextUrl").getString()
-    val appDatabaseJdbcUrl = "jdbc:h2:mem:sbs_dev;TRACE_LEVEL_FILE=4"
+    val appDatabaseJdbcUrl = environment.config.property("sbs.databaseJdbcUrl").getString()
     val appSessionEncryptionKey = environment.config.property("sbs.session.encryptionKey").getString().toByteArray()
     val appSessionSignKey = environment.config.property("sbs.session.signKey").getString().toByteArray()
     val twitterClientCredentials = environment.config.config("sbs.twitter.clientCredential").let {
