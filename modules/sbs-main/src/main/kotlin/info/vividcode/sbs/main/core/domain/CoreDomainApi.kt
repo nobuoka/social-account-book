@@ -2,6 +2,7 @@ package info.vividcode.sbs.main.core.domain
 
 import info.vividcode.orm.where
 import info.vividcode.sbs.main.core.domain.infrastructure.*
+import java.time.LocalDate
 
 internal data class User(
     val id: Long,
@@ -23,6 +24,10 @@ internal data class Account(
 ) {
     companion object
 }
+
+internal data class Balance(
+        val value: Int
+)
 
 internal fun CoreOrmContext.createUser(displayName: String): User {
     val content = UserTuple.Content(displayName)
@@ -61,4 +66,16 @@ internal fun CoreOrmContext.createAccount(
     val accountId = accounts.insert(AccountTuple.Content(targetAccountBook.id, accountLabel))
     return accounts.select(where { AccountTuple::id eq accountId }).toSet().first()
         .let(Account.Companion::from)
+}
+
+internal fun CoreOrmContext.findBalances(
+        targetAccounts: Collection<Account>, startDate: LocalDate, endDate: LocalDate
+) {
+    balances.select(where { (p(BalanceTuple::accountId) `in` targetAccounts.map { it.id }) and (BalanceTuple::date.between(startDate, endDate)) })
+}
+
+internal fun CoreOrmContext.putBalance(
+        targetAccount: Account, targetDate: LocalDate, value: Balance
+) {
+    balances.insert(BalanceTuple(targetAccount.id, targetDate, value.value))
 }

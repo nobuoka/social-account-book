@@ -10,7 +10,8 @@ internal fun userPrivateAccountBookHtml(
         accountBook: AccountBook,
         accounts: List<Account>,
         logoutPath: String,
-        userAccountsPath: String
+        userAccountsPath: String,
+        accountBalanceSetterPath: String
 ): TagConsumer<*>.() -> Unit = {
     html {
         head {
@@ -43,6 +44,20 @@ internal fun userPrivateAccountBookHtml(
                         accounts.forEach { account ->
                             li { +account.label }
                         }
+                    }
+                }
+
+                h2 { +"Put balance" }
+                form(method = FormMethod.post, action = accountBalanceSetterPath) {
+                    textInput(name = "balance")
+                    textInput(name = "date") {
+                        type = InputType.date
+                    }
+                    hiddenInput(name = "account-book-id") {
+                        value = "${accountBook.id}"
+                    }
+                    submitInput {
+                        value = "Put balance"
                     }
                 }
             }

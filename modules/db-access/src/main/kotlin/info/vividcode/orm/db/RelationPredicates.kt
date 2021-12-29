@@ -20,6 +20,10 @@ fun <T : Any> RelationPredicate<T>.toSqlWhereClause(mappingInfoRegistry: TupleCl
                 WhereClause("\"$columnName\" IN (${value.joinToString(",") { "?" }})", value.map(::valueSetter))
             }
         }
+        is RelationPredicate.Between<T, *> -> {
+            val columnName = mappingInfoRegistry.getTupleClass(type).findAttributeNameFromProperty(this.property)
+            WhereClause("\"$columnName\" BETWEEN ? AND ?", listOf(this.start, this.end).map(::valueSetter))
+        }
         is RelationPredicate.IsNull<T, *> -> {
             val columnName = mappingInfoRegistry.getTupleClass(this.type).findAttributeNameFromProperty(this.property)
             WhereClause("\"$columnName\" IS NULL", emptyList())

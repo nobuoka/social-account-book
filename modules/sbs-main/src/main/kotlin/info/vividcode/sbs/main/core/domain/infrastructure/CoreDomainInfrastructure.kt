@@ -4,6 +4,7 @@ import info.vividcode.orm.*
 import info.vividcode.sbs.main.core.domain.Account
 import info.vividcode.sbs.main.core.domain.AccountBook
 import info.vividcode.sbs.main.core.domain.User
+import java.time.LocalDate
 
 internal interface CoreOrmContext : OrmQueryContext {
 
@@ -11,6 +12,7 @@ internal interface CoreOrmContext : OrmQueryContext {
     val accountBooks: AccountBooksRelation
     val userAccountBooks: UserAccountBooksRelation
     val accounts: AccountsRelation
+    val balances: BalancesRelation
 
     /**
      * Insert [UserTuple] into [UsersRelation].
@@ -35,6 +37,12 @@ internal interface CoreOrmContext : OrmQueryContext {
      */
     @Insert(returnGeneratedKeys = true)
     fun AccountsRelation.insert(content: AccountTuple.Content): Long
+
+    /**
+     * Insert [BalanceTuple] into [BalancesRelation].
+     */
+    @Insert
+    fun BalancesRelation.insert(balance: BalanceTuple)
 
 }
 
@@ -84,3 +92,12 @@ internal data class AccountTuple(
 
 internal fun Account.Companion.from(tuple: AccountTuple) =
     Account(tuple.id, tuple.content.label)
+
+@RelationName("balances")
+internal interface BalancesRelation : BareRelation<BalanceTuple>
+
+internal data class BalanceTuple(
+        @AttributeName("account_id") val accountId: Long,
+        @AttributeName("date") val date: LocalDate,
+        @AttributeName("value") val value: Int
+)

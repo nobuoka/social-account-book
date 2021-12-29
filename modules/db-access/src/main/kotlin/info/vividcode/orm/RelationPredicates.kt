@@ -23,6 +23,12 @@ sealed class RelationPredicate<T : Any> {
     class In<T : Any, R : Any>(val type: KClass<T>, val property: KProperty1<T, R?>, val value: Collection<R>) :
         RelationPredicate<T>()
 
+    /**
+     * This class represents SQL `between` condition.
+     */
+    class Between<T : Any, R : Comparable<R>>(val type: KClass<T>, val property: KProperty1<T, R?>, val start: R, val end: R) :
+            RelationPredicate<T>()
+
     class IsNull<T : Any, R>(val type: KClass<T>, val property: KProperty1<T, R>) :
         RelationPredicate<T>()
 
@@ -62,6 +68,12 @@ object RelationPredicateBuilder {
      */
     infix fun <T : Any, E : Any> Prop<T, E?>.`in`(v: Collection<E>): RelationPredicate<T> =
         RelationPredicate.In(this.receiverClass, this.property, v)
+
+    /**
+     * Create a object which represents SQL `between` condition.
+     */
+    inline fun <reified T : Any, E : Comparable<E>> KProperty1<T, E?>.between(start: E, end: E): RelationPredicate<T> =
+            RelationPredicate.Between(T::class, this, start, end)
 
     fun <T : Any, R : Any> of(
         c: (T) -> R,
